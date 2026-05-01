@@ -1,0 +1,3030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design Masterclass - Interactive Learning</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-card: #1a2235;
+  --bg-card-hover: #1f2b42;
+  --accent: #6366f1;
+  --accent-light: #818cf8;
+  --accent-glow: rgba(99, 102, 241, 0.3);
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: #2d3748;
+  --gradient-1: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --gradient-2: linear-gradient(135deg, #3b82f6, #06b6d4);
+  --gradient-3: linear-gradient(135deg, #10b981, #34d399);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+
+/* Animated Background */
+.bg-animation {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  animation: orbFloat 20s infinite ease-in-out;
+}
+.bg-orb:nth-child(1) { width: 600px; height: 600px; background: #6366f1; top: -200px; left: -200px; }
+.bg-orb:nth-child(2) { width: 400px; height: 400px; background: #3b82f6; top: 50%; right: -100px; animation-delay: -7s; }
+.bg-orb:nth-child(3) { width: 500px; height: 500px; background: #10b981; bottom: -200px; left: 30%; animation-delay: -14s; }
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(50px, -50px) scale(1.1); }
+  50% { transform: translate(-30px, 30px) scale(0.9); }
+  75% { transform: translate(40px, 40px) scale(1.05); }
+}
+
+/* Header */
+header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  background: rgba(10, 14, 23, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.3s;
+}
+header.scrolled { box-shadow: 0 4px 30px rgba(0,0,0,0.3); }
+
+.header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.logo-icon {
+  width: 40px; height: 40px;
+  background: var(--gradient-1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  -webkit-text-fill-color: white;
+}
+
+nav { display: flex; align-items: center; gap: 8px; }
+
+nav a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s;
+  position: relative;
+}
+nav a:hover, nav a.active {
+  color: var(--text-primary);
+  background: rgba(99, 102, 241, 0.15);
+}
+nav a.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 20px; height: 3px;
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+.progress-bar {
+  position: fixed;
+  top: 70px; left: 0; right: 0;
+  height: 3px;
+  background: var(--bg-secondary);
+  z-index: 999;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--gradient-1);
+  width: 0%;
+  transition: width 0.3s;
+  border-radius: 0 3px 3px 0;
+}
+
+/* Hero Section */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-content { max-width: 900px; }
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 8px 20px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  color: var(--accent-light);
+  margin-bottom: 2rem;
+  animation: fadeInUp 0.8s ease;
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+  animation: fadeInUp 0.8s ease 0.2s both;
+}
+.hero h1 span {
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  max-width: 650px;
+  margin: 0 auto 2.5rem;
+  animation: fadeInUp 0.8s ease 0.4s both;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeInUp 0.8s ease 0.6s both;
+}
+
+.btn {
+  padding: 14px 32px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-primary {
+  background: var(--gradient-1);
+  color: white;
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px var(--accent-glow);
+}
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent);
+}
+
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  margin-top: 4rem;
+  animation: fadeInUp 0.8s ease 0.8s both;
+}
+.stat { text-align: center; }
+.stat-num {
+  font-size: 2rem;
+  font-weight: 800;
+  background: var(--gradient-2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.stat-label { font-size: 0.85rem; color: var(--text-muted); }
+
+/* Section Styles */
+section {
+  padding: 6rem 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+.section-header h2 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+.section-header h2 span {
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.section-header p {
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+  font-size: 1.1rem;
+}
+
+/* Learning Path - Tabs */
+.path-tabs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+}
+
+.path-tab {
+  padding: 10px 24px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+.path-tab:hover { border-color: var(--accent); color: var(--text-primary); }
+.path-tab.active {
+  background: var(--gradient-1);
+  border-color: transparent;
+  color: white;
+}
+
+/* Topic Cards */
+.topic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+.topic-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.topic-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--gradient-1);
+  transform: scaleX(0);
+  transition: transform 0.3s;
+}
+.topic-card:hover::before { transform: scaleX(1); }
+.topic-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--accent);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.card-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.card-icon.blue { background: rgba(59, 130, 246, 0.15); }
+.card-icon.purple { background: rgba(139, 92, 246, 0.15); }
+.card-icon.green { background: rgba(16, 185, 129, 0.15); }
+.card-icon.orange { background: rgba(245, 158, 11, 0.15); }
+.card-icon.red { background: rgba(239, 68, 68, 0.15); }
+.card-icon.cyan { background: rgba(6, 182, 212, 0.15); }
+
+.topic-card h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+}
+.topic-card p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1.2rem;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 1.2rem;
+}
+.tag {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.tag.easy { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+.tag.medium { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+.tag.hard { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Detail Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(10px);
+  z-index: 2000;
+  overflow-y: auto;
+  padding: 2rem;
+  animation: fadeIn 0.3s;
+}
+.modal-overlay.show { display: flex; align-items: flex-start; justify-content: center; }
+
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  max-width: 900px;
+  width: 100%;
+  margin: 2rem auto;
+  animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 2rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.modal-header h2 { font-size: 1.8rem; font-weight: 800; }
+.modal-close {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+.modal-close:hover { background: var(--danger); border-color: var(--danger); }
+
+.modal-body { padding: 2rem; }
+
+.modal-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 2rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 4px;
+}
+.modal-tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.3s;
+  border: none;
+  background: transparent;
+}
+.modal-tab.active {
+  background: var(--accent);
+  color: white;
+}
+
+.modal-content { display: none; }
+.modal-content.active { display: block; animation: fadeIn 0.3s; }
+
+/* Code Block */
+.code-block {
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #161b22;
+  border-bottom: 1px solid var(--border);
+}
+.code-lang {
+  font-size: 0.8rem;
+  color: var(--accent-light);
+  font-weight: 600;
+}
+.code-copy {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.code-copy:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+.code-body {
+  padding: 1.2rem;
+  overflow-x: auto;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 0.85rem;
+  line-height: 1.8;
+  counter-reset: line;
+}
+.code-body .line {
+  display: block;
+  counter-increment: line;
+}
+.code-body .line::before {
+  content: counter(line);
+  display: inline-block;
+  width: 30px;
+  margin-right: 16px;
+  color: var(--text-muted);
+  text-align: right;
+  font-size: 0.75rem;
+  user-select: none;
+}
+.kw { color: #ff7b72; }
+.str { color: #a5d6ff; }
+.cm { color: #8b949e; font-style: italic; }
+.fn { color: #d2a8ff; }
+.num { color: #79c0ff; }
+.op { color: #ff7b72; }
+.var { color: #ffa657; }
+.type { color: #7ee787; }
+
+/* SVG Diagrams */
+.diagram-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 1.5rem 0;
+  text-align: center;
+  overflow-x: auto;
+}
+.diagram-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.diagram-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 1rem;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.legend-dot {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+}
+
+/* Interactive Architecture Builder */
+.arch-builder {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 1.5rem 0;
+}
+
+.arch-components {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+.arch-comp {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px dashed var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s;
+  user-select: none;
+}
+.arch-comp:hover { border-color: var(--accent); color: var(--accent-light); }
+.arch-comp.added {
+  border-style: solid;
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--accent);
+  color: var(--accent-light);
+}
+
+.arch-canvas {
+  min-height: 200px;
+  background: var(--bg-secondary);
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+.arch-canvas.has-items {
+  border-style: solid;
+  border-color: var(--accent);
+}
+
+.arch-canvas .placed-comp {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: var(--gradient-1);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+.arch-arrows {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+/* Graph/Chart */
+.chart-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 1.5rem 0;
+}
+
+.chart-container canvas {
+  max-width: 100%;
+}
+
+/* Scenario Cards */
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.scenario-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+.scenario-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+}
+
+.scenario-header {
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+}
+.scenario-header h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+.scenario-header p { font-size: 0.85rem; color: var(--text-secondary); }
+
+.scenario-body { padding: 1.5rem; }
+
+.scenario-steps {
+  list-style: none;
+}
+.scenario-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+.step-num {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Quiz */
+.quiz-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 1.5rem 0;
+}
+
+.quiz-question {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.quiz-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.5rem; }
+
+.quiz-option {
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.quiz-option:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+.quiz-option.selected { border-color: var(--accent); background: rgba(99, 102, 241, 0.15); }
+.quiz-option.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.15); }
+.quiz-option.wrong { border-color: var(--danger); background: rgba(239, 68, 68, 0.15); }
+
+.quiz-option-letter {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.quiz-explanation {
+  display: none;
+  padding: 1rem;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-top: 1rem;
+}
+.quiz-explanation.show { display: block; animation: fadeIn 0.3s; }
+
+.quiz-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.quiz-score {
+  text-align: center;
+  padding: 2rem;
+}
+.quiz-score .score-num {
+  font-size: 4rem;
+  font-weight: 900;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.quiz-score .score-label { color: var(--text-secondary); font-size: 1.1rem; }
+
+/* Tools Grid */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.tool-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  transition: all 0.3s;
+  text-align: center;
+}
+.tool-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+}
+.tool-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+.tool-card h4 { font-size: 1rem; margin-bottom: 0.5rem; }
+.tool-card p { font-size: 0.85rem; color: var(--text-secondary); }
+.tool-category {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-top: 0.75rem;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--accent-light);
+}
+
+/* Interactive Comparison Table */
+.comparison-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--bg-card);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin: 1.5rem 0;
+}
+.comparison-table th {
+  background: var(--bg-secondary);
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--accent-light);
+  border-bottom: 1px solid var(--border);
+}
+.comparison-table td {
+  padding: 14px 20px;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.comparison-table tr:last-child td { border-bottom: none; }
+.comparison-table tr:hover td { background: var(--bg-card-hover); }
+
+/* Checklist */
+.checklist {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.checklist li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+}
+.checklist li:hover { border-color: var(--accent); }
+.checklist li.checked {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--success);
+}
+.checklist li .check-icon {
+  width: 24px; height: 24px;
+  border-radius: 6px;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+.checklist li.checked .check-icon {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(50px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+@keyframes flow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -20; }
+}
+
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Footer */
+footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  padding: 3rem 2rem;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+footer p { color: var(--text-muted); font-size: 0.9rem; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-inner { padding: 0 1rem; }
+  nav { display: none; }
+  .hero-stats { gap: 24px; }
+  .topic-grid { grid-template-columns: 1fr; }
+  .modal-body { padding: 1.2rem; }
+  section { padding: 4rem 1rem; }
+  .comparison-table { font-size: 0.8rem; }
+  .comparison-table th, .comparison-table td { padding: 10px 12px; }
+}
+
+/* Mobile Nav Toggle */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+@media (max-width: 768px) {
+  .nav-toggle { display: block; }
+}
+
+/* Flow Diagram */
+.flow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 2rem;
+}
+.flow-node {
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  min-width: 120px;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.flow-node:hover { transform: scale(1.05); }
+.flow-arrow {
+  font-size: 1.5rem;
+  color: var(--accent);
+  animation: pulse 2s infinite;
+}
+
+/* Tooltip */
+.tooltip {
+  position: relative;
+}
+.tooltip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s;
+}
+.tooltip:hover::after { opacity: 1; bottom: calc(100% + 8px); }
+
+/* Notification */
+.notification {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 3000;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.notification.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+.notification.success { background: var(--success); color: white; }
+.notification.error { background: var(--danger); color: white; }
+.notification.info { background: var(--info); color: white; }
+
+/* Highlight box */
+.info-box {
+  padding: 1.2rem 1.5rem;
+  border-radius: 12px;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.info-box.tip {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: var(--success);
+}
+.info-box.warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: var(--warning);
+}
+.info-box.info {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: var(--info);
+}
+.info-box-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+
+/* Accordion */
+.accordion { margin: 1rem 0; }
+.accordion-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.accordion-header {
+  padding: 16px 20px;
+  background: var(--bg-card);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+.accordion-header:hover { background: var(--bg-card-hover); }
+.accordion-icon { transition: transform 0.3s; }
+.accordion-item.open .accordion-icon { transform: rotate(180deg); }
+.accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+.accordion-item.open .accordion-body { max-height: 2000px; }
+.accordion-content {
+  padding: 1.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.8;
+}
+
+/* Simulator */
+.simulator {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 1.5rem 0;
+}
+
+.sim-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.sim-slider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 200px;
+}
+.sim-slider label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+.sim-slider input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+}
+.sim-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+.sim-slider .val {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-light);
+  min-width: 40px;
+  text-align: right;
+}
+
+.sim-output {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+.sim-stat {
+  background: var(--bg-secondary);
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+.sim-stat .val {
+  font-size: 1.5rem;
+  font-weight: 800;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.sim-stat .label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Search */
+.search-box {
+  max-width: 500px;
+  margin: 0 auto 2rem;
+  position: relative;
+}
+.search-box input {
+  width: 100%;
+  padding: 14px 20px 14px 48px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s;
+}
+.search-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.search-box .search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+}
+</style>
+</head>
+<body>
+
+<div class="bg-animation">
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+  <div class="bg-orb"></div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<header id="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">⚙️</div>
+      <span>SystemDesign.io</span>
+    </div>
+    <nav id="mainNav">
+      <a href="#basics" class="active">Basics</a>
+      <a href="#components">Components</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#scenarios">Scenarios</a>
+      <a href="#tools">Tools</a>
+      <a href="#simulator">Simulator</a>
+      <a href="#quiz">Quiz</a>
+    </nav>
+    <button class="nav-toggle" onclick="toggleMobileNav()">☰</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-content">
+    <div class="hero-badge">🚀 Interactive Learning Platform</div>
+    <h1>Master <span>System Design</span><br>From Zero to Architect</h1>
+    <p>Learn how to design scalable, reliable, and efficient systems with interactive diagrams, real-world examples, code samples, and hands-on scenarios.</p>
+    <div class="hero-buttons">
+      <a href="#basics" class="btn btn-primary">🎯 Start Learning</a>
+      <a href="#simulator" class="btn btn-secondary">🔧 Try Simulator</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num" data-count="15">0</div>
+        <div class="stat-label">Topics</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" data-count="50">0</div>
+        <div class="stat-label">Diagrams</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" data-count="30">0</div>
+        <div class="stat-label">Code Examples</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" data-count="10">0</div>
+        <div class="stat-label">Real Scenarios</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BASICS -->
+<section id="basics">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2>📚 <span>System Design</span> Fundamentals</h2>
+      <p>Build a strong foundation with core concepts every system designer must know</p>
+    </div>
+
+    <div class="path-tabs animate-on-scroll">
+      <button class="path-tab active" data-filter="all">All Topics</button>
+      <button class="path-tab" data-filter="beginner">🟢 Beginner</button>
+      <button class="path-tab" data-filter="intermediate">🟡 Intermediate</button>
+      <button class="path-tab" data-filter="advanced">🔴 Advanced</button>
+    </div>
+
+    <div class="topic-grid" id="topicGrid">
+      <!-- Cards will be generated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- COMPONENTS -->
+<section id="components">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2>🧩 Core <span>Components</span></h2>
+      <p>Deep dive into each building block of distributed systems with interactive diagrams</p>
+    </div>
+
+    <div class="accordion animate-on-scroll" id="componentsAccordion">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE PATTERNS -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2>🏗️ Architecture <span>Patterns</span></h2>
+      <p>Explore common architecture patterns used by tech giants</p>
+    </div>
+
+    <div class="animate-on-scroll">
+      <div class="modal-tabs" style="max-width:700px; margin: 0 auto 2rem;">
+        <button class="modal-tab active" onclick="showArchPattern('monolith')">Monolith</button>
+        <button class="modal-tab" onclick="showArchPattern('microservices')">Microservices</button>
+        <button class="modal-tab" onclick="showArchPattern('event-driven')">Event-Driven</button>
+        <button class="modal-tab" onclick="showArchPattern('serverless')">Serverless</button>
+      </div>
+
+      <div id="archMonolith" class="modal-content active">
+        <div class="diagram-container">
+          <svg viewBox="0 0 700 350" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <!-- Client -->
+            <rect x="250" y="20" width="200" height="50" rx="12" fill="#1a2235" stroke="#6366f1" stroke-width="2"/>
+            <text x="350" y="50" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="600">🌐 Client / Browser</text>
+            <!-- Arrow -->
+            <line x1="350" y1="70" x2="350" y2="110" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/></marker></defs>
+            <!-- Monolith Block -->
+            <rect x="150" y="110" width="400" height="180" rx="16" fill="#1a2235" stroke="url(#grad1)" stroke-width="2"/>
+            <text x="350" y="140" text-anchor="middle" fill="#818cf8" font-size="16" font-weight="700">⚙️ MONOLITHIC APPLICATION</text>
+            <!-- Internal blocks -->
+            <rect x="170" y="155" width="110" height="50" rx="8" fill="#2d3748"/>
+            <text x="225" y="185" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="500">UI Layer</text>
+            <rect x="295" y="155" width="110" height="50" rx="8" fill="#2d3748"/>
+            <text x="350" y="185" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="500">Business Logic</text>
+            <rect x="420" y="155" width="110" height="50" rx="8" fill="#2d3748"/>
+            <text x="475" y="185" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="500">Data Access</text>
+            <rect x="170" y="215" width="110" height="50" rx="8" fill="#2d3748"/>
+            <text x="225" y="245" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="500">Auth Service</text>
+            <rect x="295" y="215" width="110" height="50" rx="8" fill="#2d3748"/>
+            <text x="350" y="245" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="500">API Gateway</text>
+            <rect x="420" y="215" width="110" height="50" rx="8" fill="#2d3748"/>
+            <text x="475" y="245" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="500">Notification</text>
+            <!-- Arrow to DB -->
+            <line x1="350" y1="290" x2="350" y2="320" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead)"/>
+            <!-- Database -->
+            <rect x="250" y="320" width="200" height="30" rx="4" fill="#2d3748" stroke="#10b981" stroke-width="2"/>
+            <text x="350" y="340" text-anchor="middle" fill="#10b981" font-size="12" font-weight="600">💾 Single Database</text>
+          </svg>
+          <div class="diagram-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#6366f1"></div>Application</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Database</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#2d3748"></div>Internal Module</div>
+          </div>
+        </div>
+        <div class="info-box warning">
+          <span class="info-box-icon">⚠️</span>
+          <div><strong>Monolith Pros:</strong> Simple to develop, test, deploy. <strong>Cons:</strong> Hard to scale, tight coupling, single point of failure, slow deployment cycles.</div>
+        </div>
+      </div>
+
+      <div id="archMicroservices" class="modal-content">
+        <div class="diagram-container">
+          <svg viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg">
+            <rect x="250" y="20" width="200" height="45" rx="12" fill="#1a2235" stroke="#6366f1" stroke-width="2"/>
+            <text x="350" y="47" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="600">🌐 Client</text>
+            <line x1="350" y1="65" x2="350" y2="95" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow2)"/>
+            <defs><marker id="arrow2" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/></marker></defs>
+            <!-- API Gateway -->
+            <rect x="250" y="95" width="200" height="45" rx="12" fill="#1a2235" stroke="#f59e0b" stroke-width="2"/>
+            <text x="350" y="122" text-anchor="middle" fill="#f59e0b" font-size="13" font-weight="700">🚪 API Gateway</text>
+            <!-- Arrows to services -->
+            <line x1="280" y1="140" x2="120" y2="190" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow2)"/>
+            <line x1="350" y1="140" x2="350" y2="190" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow2)"/>
+            <line x1="420" y1="140" x2="580" y2="190" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow2)"/>
+            <!-- Services -->
+            <rect x="40" y="190" width="160" height="80" rx="12" fill="#1a2235" stroke="#3b82f6" stroke-width="2"/>
+            <text x="120" y="220" text-anchor="middle" fill="#3b82f6" font-size="12" font-weight="700">👤 User Service</text>
+            <text x="120" y="240" text-anchor="middle" fill="#94a3b8" font-size="10">Auth, Profiles</text>
+            <text x="120" y="258" text-anchor="middle" fill="#10b981" font-size="10">💾 PostgreSQL</text>
+
+            <rect x="270" y="190" width="160" height="80" rx="12" fill="#1a2235" stroke="#8b5cf6" stroke-width="2"/>
+            <text x="350" y="220" text-anchor="middle" fill="#8b5cf6" font-size="12" font-weight="700">📦 Order Service</text>
+            <text x="350" y="240" text-anchor="middle" fill="#94a3b8" font-size="10">Orders, Payments</text>
+            <text x="350" y="258" text-anchor="middle" fill="#10b981" font-size="10">💾 MongoDB</text>
+
+            <rect x="500" y="190" width="160" height="80" rx="12" fill="#1a2235" stroke="#06b6d4" stroke-width="2"/>
+            <text x="580" y="220" text-anchor="middle" fill="#06b6d4" font-size="12" font-weight="700">📧 Notification Svc</text>
+            <text x="580" y="240" text-anchor="middle" fill="#94a3b8" font-size="10">Email, SMS, Push</text>
+            <text x="580" y="258" text-anchor="middle" fill="#10b981" font-size="10">💾 Redis</text>
+
+            <!-- Service to service -->
+            <line x1="200" y1="230" x2="270" y2="230" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,5"/>
+            <text x="235" y="222" text-anchor="middle" fill="#f59e0b" font-size="9">gRPC</text>
+            <line x1="430" y1="230" x2="500" y2="230" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,5"/>
+            <text x="465" y="222" text-anchor="middle" fill="#f59e0b" font-size="9">Kafka</text>
+
+            <!-- Message Queue -->
+            <rect x="250" y="300" width="200" height="40" rx="10" fill="#1a2235" stroke="#ef4444" stroke-width="2"/>
+            <text x="350" y="325" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="700">📨 Message Queue (Kafka)</text>
+            <line x1="350" y1="270" x2="350" y2="300" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,5"/>
+
+            <!-- Service Discovery -->
+            <rect x="520" y="300" width="150" height="40" rx="10" fill="#1a2235" stroke="#34d399" stroke-width="2"/>
+            <text x="595" y="325" text-anchor="middle" fill="#34d399" font-size="12" font-weight="700">🔍 Service Registry</text>
+          </svg>
+          <div class="diagram-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>User Svc</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div>Order Svc</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#06b6d4"></div>Notification Svc</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Message Queue</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Inter-service Comm</div>
+          </div>
+        </div>
+        <div class="info-box info">
+          <span class="info-box-icon">💡</span>
+          <div><strong>Microservices:</strong> Each service owns its data, can be deployed independently, scales horizontally. Used by Netflix, Amazon, Uber.</div>
+        </div>
+      </div>
+
+      <div id="archEventDriven" class="modal-content">
+        <div class="diagram-container">
+          <svg viewBox="0 0 700 350" xmlns="http://www.w3.org/2000/svg">
+            <!-- Producers -->
+            <rect x="30" y="80" width="140" height="50" rx="10" fill="#1a2235" stroke="#3b82f6" stroke-width="2"/>
+            <text x="100" y="110" text-anchor="middle" fill="#3b82f6" font-size="12" font-weight="600">📱 Web App</text>
+            <rect x="30" y="150" width="140" height="50" rx="10" fill="#1a2235" stroke="#8b5cf6" stroke-width="2"/>
+            <text x="100" y="180" text-anchor="middle" fill="#8b5cf6" font-size="12" font-weight="600">📲 Mobile App</text>
+            <rect x="30" y="220" width="140" height="50" rx="10" fill="#1a2235" stroke="#06b6d4" stroke-width="2"/>
+            <text x="100" y="250" text-anchor="middle" fill="#06b6d4" font-size="12" font-weight="600">⏰ Cron Jobs</text>
+
+            <!-- Arrows to Event Bus -->
+            <line x1="170" y1="105" x2="290" y2="155" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow3)"/>
+            <line x1="170" y1="175" x2="290" y2="170" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow3)"/>
+            <line x1="170" y1="245" x2="290" y2="185" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow3)"/>
+            <defs><marker id="arrow3" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/></marker></defs>
+
+            <!-- Event Bus -->
+            <rect x="290" y="130" width="180" height="90" rx="14" fill="#1a2235" stroke="#ef4444" stroke-width="2"/>
+            <text x="380" y="165" text-anchor="middle" fill="#ef4444" font-size="14" font-weight="700">📨 Event Bus</text>
+            <text x="380" y="185" text-anchor="middle" fill="#94a3b8" font-size="11">(Apache Kafka)</text>
+            <text x="380" y="205" text-anchor="middle" fill="#94a3b8" font-size="10">Topics: orders, users, payments</text>
+
+            <!-- Arrows to Consumers -->
+            <line x1="470" y1="155" x2="570" y2="90" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow3)"/>
+            <line x1="470" y1="175" x2="570" y2="170" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow3)"/>
+            <line x1="470" y1="195" x2="570" y2="250" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow3)"/>
+
+            <!-- Consumers -->
+            <rect x="570" y="60" width="110" height="50" rx="10" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+            <text x="625" y="90" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">📊 Analytics</text>
+            <rect x="570" y="140" width="110" height="50" rx="10" fill="#1a2235" stroke="#f59e0b" stroke-width="2"/>
+            <text x="625" y="170" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">📧 Email Svc</text>
+            <rect x="570" y="225" width="110" height="50" rx="10" fill="#1a2235" stroke="#6366f1" stroke-width="2"/>
+            <text x="625" y="255" text-anchor="middle" fill="#6366f1" font-size="11" font-weight="600">🔔 Notif Svc</text>
+          </svg>
+        </div>
+        <div class="info-box tip">
+          <span class="info-box-icon">✅</span>
+          <div><strong>Event-Driven:</strong> Services communicate through events. Loose coupling, async processing, high scalability. Great for real-time systems.</div>
+        </div>
+      </div>
+
+      <div id="archServerless" class="modal-content">
+        <div class="diagram-container">
+          <svg viewBox="0 0 700 380" xmlns="http://www.w3.org/2000/svg">
+            <rect x="250" y="20" width="200" height="45" rx="12" fill="#1a2235" stroke="#6366f1" stroke-width="2"/>
+            <text x="350" y="47" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="600">🌐 Client Request</text>
+            <line x1="350" y1="65" x2="350" y2="100" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow4)"/>
+            <defs><marker id="arrow4" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/></marker></defs>
+
+            <!-- Cloud Provider -->
+            <rect x="50" y="100" width="600" height="260" rx="16" fill="#1a2235" stroke="#3b82f6" stroke-width="2" stroke-dasharray="8,4"/>
+            <text x="350" y="130" text-anchor="middle" fill="#3b82f6" font-size="14" font-weight="700">☁️ Cloud Provider (AWS / GCP / Azure)</text>
+
+            <!-- API Gateway -->
+            <rect x="250" y="145" width="200" height="40" rx="10" fill="#1a2235" stroke="#f59e0b" stroke-width="2"/>
+            <text x="350" y="170" text-anchor="middle" fill="#f59e0b" font-size="12" font-weight="700">🚪 API Gateway</text>
+            <line x1="350" y1="185" x2="350" y2="210" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow4)"/>
+
+            <!-- Lambda Functions -->
+            <rect x="80" y="210" width="120" height="60" rx="10" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+            <text x="140" y="235" text-anchor="middle" fill="#10b981" font-size="11" font-weight="600">⚡ Lambda</text>
+            <text x="140" y="252" text-anchor="middle" fill="#94a3b8" font-size="9">Process Order</text>
+
+            <rect x="290" y="210" width="120" height="60" rx="10" fill="#1a2235" stroke="#8b5cf6" stroke-width="2"/>
+            <text x="350" y="235" text-anchor="middle" fill="#8b5cf6" font-size="11" font-weight="600">⚡ Lambda</text>
+            <text x="350" y="252" text-anchor="middle" fill="#94a3b8" font-size="9">Send Email</text>
+
+            <rect x="500" y="210" width="120" height="60" rx="10" fill="#1a2235" stroke="#06b6d4" stroke-width="2"/>
+            <text x="560" y="235" text-anchor="middle" fill="#06b6d4" font-size="11" font-weight="600">⚡ Lambda</text>
+            <text x="560" y="252" text-anchor="middle" fill="#94a3b8" font-size="9">Update DB</text>
+
+            <!-- Connections -->
+            <line x1="350" y1="185" x2="140" y2="210" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrow4)"/>
+            <line x1="350" y1="185" x2="350" y2="210" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrow4)"/>
+            <line x1="350" y1="185" x2="560" y2="210" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrow4)"/>
+
+            <!-- DynamoDB -->
+            <rect x="450" y="300" width="170" height="40" rx="8" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+            <text x="535" y="325" text-anchor="middle" fill="#10b981" font-size="12" font-weight="600">💾 DynamoDB / S3</text>
+            <line x1="560" y1="270" x2="560" y2="300" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrow4)"/>
+          </svg>
+        </div>
+        <div class="info-box info">
+          <span class="info-box-icon">💡</span>
+          <div><strong>Serverless:</strong> No server management, auto-scaling, pay-per-use. Best for sporadic workloads, APIs, event processing. Cold starts are a consideration.</div>
+        </div>
+      </div>
+
+      <!-- Comparison Table -->
+      <table class="comparison-table animate-on-scroll">
+        <thead>
+          <tr>
+            <th>Pattern</th>
+            <th>Scalability</th>
+            <th>Complexity</th>
+            <th>Best For</th>
+            <th>Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>🏢 Monolith</td><td>⭐</td><td>Low</td><td>Small teams, MVPs</td><td>Low</td></tr>
+          <tr><td>🧩 Microservices</td><td>⭐⭐⭐⭐⭐</td><td>High</td><td>Large-scale systems</td><td>High</td></tr>
+          <tr><td>📨 Event-Driven</td><td>⭐⭐⭐⭐</td><td>Medium</td><td>Real-time, async systems</td><td>Medium</td></tr>
+          <tr><td>☁️ Serverless</td><td>⭐⭐⭐⭐⭐</td><td>Medium</td><td>Event processing, APIs</td><td>Variable</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- SCENARIOS -->
+<section id="scenarios">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2>🎯 Real-World <span>Scenarios</span></h2>
+      <p>Learn system design by solving actual problems faced by tech companies</p>
+    </div>
+
+    <div class="scenario-grid" id="scenarioGrid">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section id="tools">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2>🛠️ Essential <span>Tools</span></h2>
+      <p>Industry-standard tools used for building and monitoring distributed systems</p>
+    </div>
+
+    <div class="search-box animate-on-scroll">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="toolSearch" placeholder="Search tools..." oninput="filterTools(this.value)">
+    </div>
+
+    <div class="tools-grid" id="toolsGrid">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- SIMULATOR -->
+<section id="simulator">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2>🔧 System <span>Simulator</span></h2>
+      <p>Interact with a load balancer simulation to understand how requests are distributed</p>
+    </div>
+
+    <div class="simulator animate-on-scroll">
+      <h3 style="margin-bottom: 1rem;">⚖️ Load Balancer Simulator</h3>
+      <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+        Adjust parameters to see how a load balancer distributes traffic across servers.
+      </p>
+
+      <div class="sim-controls">
+        <div class="sim-slider">
+          <label>📊 Requests/sec:</label>
+          <input type="range" id="reqRate" min="10" max="1000" value="100" oninput="updateSim()">
+          <span class="val" id="reqRateVal">100</span>
+        </div>
+        <div class="sim-slider">
+          <label>🖥️ Servers:</label>
+          <input type="range" id="serverCount" min="1" max="10" value="3" oninput="updateSim()">
+          <span class="val" id="serverCountVal">3</span>
+        </div>
+        <div class="sim-slider">
+          <label>⏱️ Latency (ms):</label>
+          <input type="range" id="latency" min="1" max="500" value="50" oninput="updateSim()">
+          <span class="val" id="latencyVal">50</span>
+        </div>
+      </div>
+
+      <div class="sim-output" id="simOutput">
+        <!-- Generated by JS -->
+      </div>
+
+      <!-- Server visualization -->
+      <div class="diagram-container" style="margin-top: 1.5rem;">
+        <div id="serverViz" style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+
+      <div style="margin-top: 1.5rem;">
+        <canvas id="simChart" width="800" height="250" style="width:100%; border-radius: 12px;"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE BUILDER -->
+<section id="builder">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2>🏗️ Architecture <span>Builder</span></h2>
+      <p>Click components to build your own system architecture</p>
+    </div>
+
+    <div class="arch-builder animate-on-scroll">
+      <h4 style="margin-bottom: 0.5rem;">Available Components:</h4>
+      <div class="arch-components" id="archComponents">
+        <button class="arch-comp" onclick="toggleArchComp(this)">🌐 Client</button>
+        <button class="arch-comp" onclick="toggleArchComp(this)">🚪 CDN</button>
+        <button class="arch-comp" onclick="toggleArchComp(this)">⚖️ Load Balancer</button>
+        <button class="arch-comp" onclick="toggleArchComp(this)">🔒 Auth Service</button>
+        <button class="arch-comp" onclick="toggleArchComp(this)">📦 API Server</button>
+        <button class="arch-comp" onclick="toggleArchComp(this)">📨 Message Queue</button>
+        <button class="arch-comp" onclick="toggleArchComp(this)">⚡ Cache (Redis)</button>
+        <button class="arch-comp" onclick="toggleArchComp(this)">💾 Database</button>
+        <button class="arch-comp" onclick="toggleArchComp(this)">📊 Analytics</button>
+        <button class="arch-comp" onclick="toggleArchComp(this)">📧 Email Service</button>
+        <button class="arch-comp" onclick="toggleArchComp(this)">🔍 Search (Elastic)</button>
+        <button class="arch-comp" onclick="toggleArchComp(this)">📝 Log Aggregator</button>
+      </div>
+      <h4 style="margin-bottom: 0.5rem;">Your Architecture:</h4>
+      <div class="arch-canvas" id="archCanvas">
+        <span style="color: var(--text-muted); font-size: 0.9rem;">Click components above to add them here →</span>
+      </div>
+      <div class="arch-arrows" id="archArrows"></div>
+    </div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2>🧠 Knowledge <span>Check</span></h2>
+      <p>Test your understanding with interactive quiz questions</p>
+    </div>
+
+    <div class="quiz-container animate-on-scroll" id="quizContainer">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- CHECKLIST -->
+<section id="checklist">
+  <div class="container">
+    <div class="section-header animate-on-scroll">
+      <h2>✅ System Design <span>Checklist</span></h2>
+      <p>Track your progress through the system design curriculum</p>
+    </div>
+
+    <ul class="checklist animate-on-scroll" id="checklistItems">
+      <!-- Generated by JS -->
+    </ul>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>🚀 System Design Masterclass — Built with ❤️ for aspiring system architects</p>
+  <p style="margin-top: 0.5rem; font-size: 0.8rem;">Interactive diagrams, code examples, simulators & real-world scenarios</p>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2 id="modalTitle">Topic</h2>
+        <p id="modalSubtitle" style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;"></p>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-tabs" id="modalTabs">
+        <button class="modal-tab active" onclick="switchModalTab('concept')">📖 Concept</button>
+        <button class="modal-tab" onclick="switchModalTab('diagram')">📊 Diagram</button>
+        <button class="modal-tab" onclick="switchModalTab('code')">💻 Code</button>
+        <button class="modal-tab" onclick="switchModalTab('scenario')">🎯 Scenario</button>
+      </div>
+      <div id="modalConcept" class="modal-content active"></div>
+      <div id="modalDiagram" class="modal-content"></div>
+      <div id="modalCode" class="modal-content"></div>
+      <div id="modalScenario" class="modal-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notification" id="notification"></div>
+
+<script>
+// ==================== DATA ====================
+const topics = [
+  {
+    id: 'scalability',
+    title: 'Scalability',
+    desc: 'Learn how to design systems that handle growing amounts of work by adding resources.',
+    level: 'beginner',
+    icon: '📈',
+    iconClass: 'blue',
+    time: '15 min',
+    tags: ['Vertical', 'Horizontal', 'Elastic'],
+    concept: `<h3>What is Scalability?</h3>
+<p style="color:var(--text-secondary);margin:1rem 0;">Scalability is the ability of a system to handle increased load by adding resources. There are two main approaches:</p>
+<div class="info-box info"><span class="info-box-icon">📐</span><div><strong>Vertical Scaling (Scale Up):</strong> Adding more power (CPU, RAM) to existing machines. Simple but has limits and single point of failure.</div></div>
+<div class="info-box tip"><span class="info-box-icon">🔄</span><div><strong>Horizontal Scaling (Scale Out):</strong> Adding more machines to distribute load. More complex but virtually unlimited and fault-tolerant.</div></div>
+<h4 style="margin-top:1.5rem;">Key Concepts:</h4>
+<ul style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li><strong>Stateless vs Stateful:</strong> Stateless services are easier to scale horizontally</li>
+  <li><strong>Elastic Scaling:</strong> Auto-scaling based on demand (AWS Auto Scaling, K8s HPA)</li>
+  <li><strong>Capacity Planning:</strong> Estimating future resource needs</li>
+  <li><strong>Bottleneck Analysis:</strong> Finding and fixing the weakest link</li>
+</ul>`,
+    diagram: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+      <text x="350" y="30" text-anchor="middle" fill="#f1f5f9" font-size="16" font-weight="700">Vertical vs Horizontal Scaling</text>
+      <!-- Vertical -->
+      <rect x="60" y="60" width="250" height="200" rx="12" fill="#1a2235" stroke="#3b82f6" stroke-width="2"/>
+      <text x="185" y="90" text-anchor="middle" fill="#3b82f6" font-size="14" font-weight="700">📐 Vertical Scaling</text>
+      <rect x="80" y="110" width="210" height="40" rx="8" fill="#2d3748"/>
+      <text x="185" y="135" text-anchor="middle" fill="#f1f5f9" font-size="11">Server: 4 CPU, 16GB RAM</text>
+      <rect x="80" y="160" width="210" height="40" rx="8" fill="#2d3748"/>
+      <text x="185" y="185" text-anchor="middle" fill="#f59e0b" font-size="11">→ Upgrade: 8 CPU, 64GB RAM</text>
+      <rect x="80" y="210" width="210" height="40" rx="8" fill="#2d3748"/>
+      <text x="185" y="235" text-anchor="middle" fill="#ef4444" font-size="11">⚠️ Single Point of Failure</text>
+      <!-- Horizontal -->
+      <rect x="390" y="60" width="250" height="200" rx="12" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+      <text x="515" y="90" text-anchor="middle" fill="#10b981" font-size="14" font-weight="700">🔄 Horizontal Scaling</text>
+      <rect x="410" y="110" width="95" height="35" rx="6" fill="#2d3748"/>
+      <text x="457" y="132" text-anchor="middle" fill="#f1f5f9" font-size="10">Server 1</text>
+      <rect x="515" y="110" width="95" height="35" rx="6" fill="#2d3748"/>
+      <text x="562" y="132" text-anchor="middle" fill="#f1f5f9" font-size="10">Server 2</text>
+      <rect x="620" y="110" width="10" height="35" rx="2" fill="#2d3748"/>
+      <rect x="410" y="155" width="95" height="35" rx="6" fill="#2d3748"/>
+      <text x="457" y="177" text-anchor="middle" fill="#10b981" font-size="10">Server 3</text>
+      <rect x="515" y="155" width="95" height="35" rx="6" fill="#2d3748"/>
+      <text x="562" y="177" text-anchor="middle" fill="#10b981" font-size="10">Server 4</text>
+      <rect x="620" y="155" width="10" height="35" rx="2" fill="#2d3748"/>
+      <rect x="410" y="200" width="220" height="40" rx="8" fill="#2d3748"/>
+      <text x="520" y="225" text-anchor="middle" fill="#10b981" font-size="11">✅ Fault Tolerant + Unlimited</text>
+    </svg>`,
+    code: `<span class="cm">// Kubernetes Horizontal Pod Autoscaler</span>
+<span class="kw">apiVersion</span>: <span class="str">autoscaling/v2</span>
+<span class="kw">kind</span>: <span class="type">HorizontalPodAutoscaler</span>
+<span class="kw">metadata</span>:
+  <span class="kw">name</span>: <span class="var">web-app-hpa</span>
+<span class="kw">spec</span>:
+  <span class="kw">scaleTargetRef</span>:
+    <span class="kw">apiVersion</span>: <span class="str">apps/v1</span>
+    <span class="kw">kind</span>: <span class="type">Deployment</span>
+    <span class="kw">name</span>: <span class="var">web-app</span>
+  <span class="kw">minReplicas</span>: <span class="num">2</span>
+  <span class="kw">maxReplicas</span>: <span class="num">10</span>
+  <span class="kw">metrics</span>:
+  - <span class="kw">type</span>: <span class="type">Resource</span>
+    <span class="kw">resource</span>:
+      <span class="kw">name</span>: <span class="var">cpu</span>
+      <span class="kw">target</span>:
+        <span class="kw">type</span>: <span class="type">Utilization</span>
+        <span class="kw">averageUtilization</span>: <span class="num">70</span>`,
+    scenario: `<h4>🎯 Scenario: E-commerce Flash Sale</h4>
+<p style="color:var(--text-secondary);margin:1rem 0;">Your e-commerce platform needs to handle a flash sale where traffic spikes 50x in 5 minutes.</p>
+<div class="info-box warning"><span class="info-box-icon">⚠️</span><div><strong>Problem:</strong> Current setup has 3 servers handling 100 req/s. Flash sale will bring 5000 req/s.</div></div>
+<h4 style="margin-top:1rem;">Solution Steps:</h4>
+<ol style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li>Pre-warm auto-scaling groups before the event</li>
+  <li>Implement CDN caching for static assets</li>
+  <li>Use Redis cache for product catalog</li>
+  <li>Queue orders with Kafka for async processing</li>
+  <li>Implement rate limiting to prevent overload</li>
+  <li>Use circuit breakers for downstream services</li>
+</ol>`
+  },
+  {
+    id: 'load-balancing',
+    title: 'Load Balancing',
+    desc: 'Distribute incoming traffic across multiple servers for high availability and performance.',
+    level: 'beginner',
+    icon: '⚖️',
+    iconClass: 'green',
+    time: '20 min',
+    tags: ['Round Robin', 'Least Conn', 'IP Hash'],
+    concept: `<h3>Load Balancing Deep Dive</h3>
+<p style="color:var(--text-secondary);margin:1rem 0;">A load balancer sits between clients and servers, distributing incoming requests to prevent any single server from becoming a bottleneck.</p>
+<h4>Algorithms:</h4>
+<ul style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li><strong>Round Robin:</strong> Distributes requests sequentially. Simple but ignores server load.</li>
+  <li><strong>Least Connections:</strong> Sends to server with fewest active connections. Better for varying request durations.</li>
+  <li><strong>IP Hash:</strong> Same client always goes to same server. Good for session persistence.</li>
+  <li><strong>Weighted:</strong> More powerful servers get more traffic.</li>
+</ul>
+<h4>Types:</h4>
+<div class="info-box info"><span class="info-box-icon">🌐</span><div><strong>Layer 4 (Transport):</strong> Routes based on IP/port (TCP/UDP). Faster but less intelligent.</div></div>
+<div class="info-box tip"><span class="info-box-icon">📡</span><div><strong>Layer 7 (Application):</strong> Routes based on HTTP headers, URL, cookies. Can do content-based routing.</div></div>`,
+    diagram: `<svg viewBox="0 0 700 350" xmlns="http://www.w3.org/2000/svg">
+      <rect x="250" y="20" width="200" height="45" rx="12" fill="#1a2235" stroke="#6366f1" stroke-width="2"/>
+      <text x="350" y="47" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="600">👥 Users / Clients</text>
+      <line x1="350" y1="65" x2="350" y2="110" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow5)"/>
+      <defs><marker id="arrow5" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/></marker></defs>
+      <rect x="250" y="110" width="200" height="50" rx="12" fill="#1a2235" stroke="#f59e0b" stroke-width="2"/>
+      <text x="350" y="135" text-anchor="middle" fill="#f59e0b" font-size="13" font-weight="700">⚖️ Load Balancer</text>
+      <text x="350" y="152" text-anchor="middle" fill="#94a3b8" font-size="9">Algorithm: Round Robin</text>
+      <line x1="300" y1="160" x2="120" y2="210" stroke="#6366f1" stroke-width="2"/>
+      <line x1="350" y1="160" x2="350" y2="210" stroke="#6366f1" stroke-width="2"/>
+      <line x1="400" y1="160" x2="580" y2="210" stroke="#6366f1" stroke-width="2"/>
+      <rect x="40" y="210" width="160" height="80" rx="12" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+      <text x="120" y="240" text-anchor="middle" fill="#10b981" font-size="12" font-weight="700">🖥️ Server 1</text>
+      <text x="120" y="260" text-anchor="middle" fill="#94a3b8" font-size="10">CPU: 45% | RAM: 60%</text>
+      <text x="120" y="278" text-anchor="middle" fill="#6366f1" font-size="10">Active: 150 req</text>
+      <rect x="270" y="210" width="160" height="80" rx="12" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+      <text x="350" y="240" text-anchor="middle" fill="#10b981" font-size="12" font-weight="700">🖥️ Server 2</text>
+      <text x="350" y="260" text-anchor="middle" fill="#94a3b8" font-size="10">CPU: 38% | RAM: 52%</text>
+      <text x="350" y="278" text-anchor="middle" fill="#6366f1" font-size="10">Active: 130 req</text>
+      <rect x="500" y="210" width="160" height="80" rx="12" fill="#1a2235" stroke="#ef4444" stroke-width="2"/>
+      <text x="580" y="240" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="700">🖥️ Server 3</text>
+      <text x="580" y="260" text-anchor="middle" fill="#94a3b8" font-size="10">CPU: 92% | RAM: 88%</text>
+      <text x="580" y="278" text-anchor="middle" fill="#ef4444" font-size="10">⚠️ OVERLOADED</text>
+      <text x="580" y="320" text-anchor="middle" fill="#94a3b8" font-size="10">Health check: FAILED</text>
+      <text x="350" y="340" text-anchor="middle" fill="#94a3b8" font-size="10">LB removes unhealthy server automatically</text>
+    </svg>`,
+    code: `<span class="cm">// Nginx Load Balancer Configuration</span>
+<span class="kw">upstream</span> <span class="var">backend</span> {
+    <span class="cm"># Least Connections algorithm</span>
+    <span class="kw">least_conn</span>;
+
+    <span class="var">server1.example.com</span> <span class="kw">weight=3</span>;
+    <span class="var">server2.example.com</span>;
+    <span class="var">server3.example.com</span> <span class="kw">backup</span>;
+}
+
+<span class="kw">server</span> {
+    <span class="kw">listen</span> <span class="num">80</span>;
+
+    <span class="kw">location</span> <span class="str">/</span> {
+        <span class="kw">proxy_pass</span> <span class="var">http://backend</span>;
+        <span class="kw">proxy_set_header</span> <span class="var">Host</span> <span class="str">$host</span>;
+        <span class="kw">proxy_set_header</span> <span class="var">X-Real-IP</span> <span class="str">$remote_addr</span>;
+
+        <span class="cm"># Health check interval</span>
+        <span class="kw">proxy_next_upstream</span> <span class="var">error timeout</span>;
+    }
+}`,
+    scenario: `<h4>🎯 Scenario: High-Traffic API</h4>
+<p style="color:var(--text-secondary);margin:1rem 0;">Your REST API handles 10K req/s during peak hours. Users report intermittent 503 errors.</p>
+<h4 style="margin-top:1rem;">Diagnosis:</h4>
+<div class="info-box warning"><span class="info-box-icon">🔍</span><div>One of 3 backend servers is overloaded (90%+ CPU), causing timeouts. The load balancer uses Round Robin, so it keeps sending traffic to the struggling server.</div></div>
+<h4 style="margin-top:1rem;">Solution:</h4>
+<ol style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li>Switch to <strong>Least Connections</strong> algorithm</li>
+  <li>Add <strong>health checks</strong> (every 5 seconds)</li>
+  <li>Configure <strong>max_fails=3</strong> and <strong>fail_timeout=30s</strong></li>
+  <li>Add a <strong>backup server</strong> for overflow</li>
+  <li>Implement <strong>rate limiting</strong> per IP</li>
+</ol>`
+  },
+  {
+    id: 'caching',
+    title: 'Caching Strategies',
+    desc: 'Speed up your system by storing frequently accessed data in fast-access memory layers.',
+    level: 'intermediate',
+    icon: '⚡',
+    iconClass: 'orange',
+    time: '25 min',
+    tags: ['Redis', 'CDN', 'Cache-Aside', 'Write-Through'],
+    concept: `<h3>Caching Strategies</h3>
+<p style="color:var(--text-secondary);margin:1rem 0;">Caching stores copies of data in a faster storage layer to reduce latency and database load.</p>
+<h4>Common Patterns:</h4>
+<ul style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li><strong>Cache-Aside (Lazy Loading):</strong> App checks cache first. On miss, reads from DB and populates cache.</li>
+  <li><strong>Write-Through:</strong> Data written to cache and DB simultaneously. Consistent but slower writes.</li>
+  <li><strong>Write-Behind:</strong> Write to cache, asynchronously flush to DB. Fast but risk of data loss.</li>
+  <li><strong>Refresh-Ahead:</strong> Proactively refresh cache before expiry. Predictable latency.</li>
+</ul>
+<h4>Cache Eviction Policies:</h4>
+<div class="info-box tip"><span class="info-box-icon">🗑️</span><div><strong>LRU:</strong> Least Recently Used — most common. <strong>LFU:</strong> Least Frequently Used. <strong>FIFO:</strong> First In First Out. <strong>TTL:</strong> Time To Live — auto-expire.</div></div>`,
+    diagram: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+      <text x="350" y="30" text-anchor="middle" fill="#f1f5f9" font-size="16" font-weight="700">Cache-Aside Pattern</text>
+      <rect x="250" y="50" width="200" height="40" rx="10" fill="#1a2235" stroke="#6366f1" stroke-width="2"/>
+      <text x="350" y="75" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="600">📱 Application</text>
+      <line x1="350" y1="90" x2="350" y2="140" stroke="#6366f1" stroke-width="2"/>
+      <rect x="250" y="140" width="200" height="40" rx="10" fill="#1a2235" stroke="#f59e0b" stroke-width="2"/>
+      <text x="350" y="165" text-anchor="middle" fill="#f59e0b" font-size="13" font-weight="700">⚡ Cache (Redis)</text>
+      <text x="350" y="182" text-anchor="middle" fill="#94a3b8" font-size="9">TTL: 5 min | Eviction: LRU</text>
+      <line x1="350" y1="180" x2="350" y2="230" stroke="#6366f1" stroke-width="2"/>
+      <rect x="250" y="230" width="200" height="40" rx="10" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+      <text x="350" y="255" text-anchor="middle" fill="#10b981" font-size="13" font-weight="700">💾 Database</text>
+      <!-- Flow labels -->
+      <text x="200" y="120" text-anchor="middle" fill="#10b981" font-size="10">① Cache Hit → Return</text>
+      <text x="500" y="120" text-anchor="middle" fill="#f59e0b" font-size="10">② Cache Miss →</text>
+      <text x="500" y="210" text-anchor="middle" fill="#f59e0b" font-size="10">③ Query DB →</text>
+      <text x="200" y="210" text-anchor="middle" fill="#f59e0b" font-size="10">④ Populate Cache</text>
+    </svg>`,
+    code: `<span class="cm">// Redis Cache-Aside Pattern (Python)</span>
+<span class="kw">import</span> redis
+<span class="kw">import</span> json
+
+<span class="var">cache</span> = redis.<span class="fn">Redis</span>(<span class="var">host</span>=<span class="str">'localhost'</span>, <span class="var">port</span>=<span class="num">6379</span>)
+
+<span class="kw">def</span> <span class="fn">get_user</span>(<span class="var">user_id</span>):
+    <span class="cm"># Step 1: Check cache</span>
+    <span class="var">cache_key</span> = <span class="str">f"user:{user_id}"</span>
+    <span class="var">cached</span> = cache.<span class="fn">get</span>(<span class="var">cache_key</span>)
+
+    <span class="kw">if</span> <span class="var">cached</span>:
+        <span class="kw">return</span> json.<span class="fn">loads</span>(<span class="var">cached</span>)
+
+    <span class="cm"># Step 2: Cache miss - query database</span>
+    <span class="var">user</span> = db.<span class="fn">query</span>(<span class="str">"SELECT * FROM users WHERE id = %s"</span>, <span class="var">user_id</span>)
+
+    <span class="cm"># Step 3: Populate cache with TTL</span>
+    <span class="kw">if</span> <span class="var">user</span>:
+        cache.<span class="fn">setex</span>(<span class="var">cache_key</span>, <span class="num">300</span>, json.<span class="fn">dumps</span>(<span class="var">user</span>))
+
+    <span class="kw">return</span> <span class="var">user</span>`,
+    scenario: `<h4>🎯 Scenario: Social Media Feed</h4>
+<p style="color:var(--text-secondary);margin:1rem 0;">A social media platform needs to serve personalized feeds to 1M+ concurrent users.</p>
+<h4 style="margin-top:1rem;">Caching Strategy:</h4>
+<ol style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li><strong>Redis Cache</strong> for user feeds (TTL: 5 minutes)</li>
+  <li><strong>CDN</strong> for static images and videos</li>
+  <li><strong>Cache-Aside</strong> for user profile data</li>
+  <li><strong>Write-Through</strong> for critical data (likes, comments)</li>
+  <li><strong>Cache invalidation</strong> on post updates using pub/sub</li>
+  <li><strong>Multi-level caching:</strong> Browser → CDN → Redis → DB</li>
+</ol>`
+  },
+  {
+    id: 'database',
+    title: 'Database Design',
+    desc: 'Choose the right database (SQL vs NoSQL) and design schemas for scale.',
+    level: 'intermediate',
+    icon: '💾',
+    iconClass: 'purple',
+    time: '30 min',
+    tags: ['SQL', 'NoSQL', 'Sharding', 'Replication'],
+    concept: `<h3>Database Design for Scale</h3>
+<p style="color:var(--text-secondary);margin:1rem 0;">Choosing the right database is critical. SQL offers ACID guarantees while NoSQL provides flexibility and horizontal scaling.</p>
+<h4>SQL vs NoSQL:</h4>
+<table class="comparison-table">
+  <thead><tr><th>Aspect</th><th>SQL (PostgreSQL, MySQL)</th><th>NoSQL (MongoDB, Cassandra)</th></tr></thead>
+  <tbody>
+    <tr><td>Data Model</td><td>Tables, Rows, Relations</td><td>Documents, Key-Value, Graph</td></tr>
+    <tr><td>ACID</td><td>✅ Full ACID compliance</td><td>⚠️ Eventual consistency (BASE)</td></tr>
+    <tr><td>Scaling</td><td>Vertical + Read Replicas</td><td>Horizontal (Sharding)</td></tr>
+    <tr><td>Schema</td><td>Fixed, rigid</td><td>Flexible, dynamic</td></tr>
+    <tr><td>Best For</td><td>Transactions, complex queries</td><td>Large-scale, unstructured data</td></tr>
+  </tbody>
+</table>`,
+    diagram: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+      <text x="350" y="30" text-anchor="middle" fill="#f1f5f9" font-size="16" font-weight="700">Database Replication & Sharding</text>
+      <!-- Master -->
+      <rect x="50" y="70" width="140" height="60" rx="10" fill="#1a2235" stroke="#6366f1" stroke-width="2"/>
+      <text x="120" y="95" text-anchor="middle" fill="#6366f1" font-size="12" font-weight="700">📝 Primary DB</text>
+      <text x="120" y="115" text-anchor="middle" fill="#94a3b8" font-size="10">Writes + Reads</text>
+      <!-- Arrows to replicas -->
+      <line x1="190" y1="90" x2="300" y2="70" stroke="#10b981" stroke-width="1.5"/>
+      <line x1="190" y1="100" x2="300" y2="100" stroke="#10b981" stroke-width="1.5"/>
+      <line x1="190" y1="110" x2="300" y2="130" stroke="#10b981" stroke-width="1.5"/>
+      <!-- Replicas -->
+      <rect x="300" y="50" width="120" height="45" rx="8" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+      <text x="360" y="77" text-anchor="middle" fill="#10b981" font-size="11">📖 Replica 1</text>
+      <rect x="300" y="100" width="120" height="45" rx="8" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+      <text x="360" y="127" text-anchor="middle" fill="#10b981" font-size="11">📖 Replica 2</text>
+      <rect x="300" y="150" width="120" height="45" rx="8" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+      <text x="360" y="177" text-anchor="middle" fill="#10b981" font-size="11">📖 Replica 3</text>
+      <!-- Sharding -->
+      <rect x="500" y="50" width="160" height="40" rx="10" fill="#1a2235" stroke="#f59e0b" stroke-width="2"/>
+      <text x="580" y="75" text-anchor="middle" fill="#f59e0b" font-size="11">🔀 Shard: A-M</text>
+      <rect x="500" y="100" width="160" height="40" rx="10" fill="#1a2235" stroke="#f59e0b" stroke-width="2"/>
+      <text x="580" y="125" text-anchor="middle" fill="#f59e0b" font-size="11">🔀 Shard: N-Z</text>
+      <rect x="500" y="150" width="160" height="40" rx="10" fill="#1a2235" stroke="#f59e0b" stroke-width="2"/>
+      <text x="580" y="175" text-anchor="middle" fill="#f59e0b" font-size="11">🔀 Shard: 0-9</text>
+      <!-- Labels -->
+      <text x="250" y="100" text-anchor="middle" fill="#94a3b8" font-size="9">Async Replication</text>
+      <text x="460" y="110" text-anchor="middle" fill="#94a3b8" font-size="9">Sharding by</text>
+      <text x="460" y="125" text-anchor="middle" fill="#94a3b8" font-size="9">Key Range</text>
+    </svg>`,
+    code: `<span class="cm">// Database Sharding Strategy (Python)</span>
+<span class="kw">import</span> hashlib
+
+<span class="kw">class</span> <span class="type">ShardManager</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="var">self</span>, <span class="var">num_shards</span>=<span class="num">4</span>):
+        <span class="var">self</span>.<span class="var">num_shards</span> = <span class="var">num_shards</span>
+        <span class="var">self</span>.<span class="var">shards</span> = [<span class="fn">connect_db</span>(<span class="str">f"shard_{i}"</span>)
+                        <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="var">num_shards</span>)]
+
+    <span class="kw">def</span> <span class="fn">get_shard</span>(<span class="var">self</span>, <span class="var">user_id</span>):
+        <span class="var">hash_val</span> = hashlib.<span class="fn">md5</span>(
+            <span class="fn">str</span>(<span class="var">user_id</span>).<span class="fn">encode</span>()
+        ).<span class="fn">hexdigest</span>()
+        <span class="var">shard_idx</span> = <span class="fn">int</span>(<span class="var">hash_val</span>, <span class="num">16</span>) % <span class="var">self</span>.<span class="var">num_shards</span>
+        <span class="kw">return</span> <span class="var">self</span>.<span class="var">shards</span>[<span class="var">shard_idx</span>]
+
+    <span class="kw">def</span> <span class="fn">get_user</span>(<span class="var">self</span>, <span class="var">user_id</span>):
+        <span class="var">shard</span> = <span class="var">self</span>.<span class="fn">get_shard</span>(<span class="var">user_id</span>)
+        <span class="kw">return</span> <span class="var">shard</span>.<span class="fn">query</span>(<span class="str">"SELECT * FROM users WHERE id = %s"</span>, <span class="var">user_id</span>)`,
+    scenario: `<h4>🎯 Scenario: Global E-commerce Platform</h4>
+<p style="color:var(--text-secondary);margin:1rem 0;">You need to design a database for a global e-commerce platform with 100M users across 50 countries.</p>
+<h4 style="margin-top:1rem;">Design Decisions:</h4>
+<ol style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li><strong>PostgreSQL</strong> for orders/payments (ACID required)</li>
+  <li><strong>MongoDB</strong> for product catalog (flexible schema)</li>
+  <li><strong>Sharding</strong> by user_id (consistent hashing)</li>
+  <li><strong>Read replicas</strong> in each region for low latency</li>
+  <li><strong>Redis</strong> for session and cart data</li>
+  <li><strong>CDC (Change Data Capture)</strong> for analytics pipeline</li>
+</ol>`
+  },
+  {
+    id: 'messaging',
+    title: 'Message Queues',
+    desc: 'Decouple services and handle async processing with message brokers.',
+    level: 'intermediate',
+    icon: '📨',
+    iconClass: 'cyan',
+    time: '25 min',
+    tags: ['Kafka', 'RabbitMQ', 'Pub/Sub', 'SQS'],
+    concept: `<h3>Message Queues & Event Streaming</h3>
+<p style="color:var(--text-secondary);margin:1rem 0;">Message queues enable asynchronous communication between services, decoupling producers from consumers.</p>
+<h4>When to Use:</h4>
+<ul style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li><strong>Async Processing:</strong> Email sending, image processing, report generation</li>
+  <li><strong>Load Leveling:</strong> Buffer spikes in traffic</li>
+  <li><strong>Decoupling:</strong> Services don't need to know about each other</li>
+  <li><strong>Event Streaming:</strong> Real-time data pipelines (Kafka)</li>
+</ul>
+<div class="info-box tip"><span class="info-box-icon">🔑</span><div><strong>Kafka:</strong> High-throughput, persistent, replayable. Best for event streaming. <strong>RabbitMQ:</strong> Flexible routing, lower throughput. Best for complex routing. <strong>SQS:</strong> Managed, simple. Best for AWS ecosystems.</div></div>`,
+    diagram: `<svg viewBox="0 0 700 280" xmlns="http://www.w3.org/2000/svg">
+      <text x="350" y="30" text-anchor="middle" fill="#f1f5f9" font-size="16" font-weight="700">Message Queue Flow</text>
+      <rect x="30" y="80" width="140" height="50" rx="10" fill="#1a2235" stroke="#3b82f6" stroke-width="2"/>
+      <text x="100" y="100" text-anchor="middle" fill="#3b82f6" font-size="12" font-weight="600">📱 Order Service</text>
+      <text x="100" y="118" text-anchor="middle" fill="#94a3b8" font-size="9">(Producer)</text>
+      <line x1="170" y1="105" x2="270" y2="105" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow6)"/>
+      <defs><marker id="arrow6" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/></marker></defs>
+      <rect x="270" y="70" width="180" height="70" rx="14" fill="#1a2235" stroke="#ef4444" stroke-width="2"/>
+      <text x="360" y="100" text-anchor="middle" fill="#ef4444" font-size="13" font-weight="700">📨 Kafka Topic</text>
+      <text x="360" y="120" text-anchor="middle" fill="#94a3b8" font-size="10">Partitions: 6 | Replicas: 3</text>
+      <!-- Consumers -->
+      <line x1="450" y1="90" x2="550" y2="70" stroke="#6366f1" stroke-width="1.5"/>
+      <line x1="450" y1="105" x2="550" y2="105" stroke="#6366f1" stroke-width="1.5"/>
+      <line x1="450" y1="120" x2="550" y2="140" stroke="#6366f1" stroke-width="1.5"/>
+      <rect x="550" y="45" width="130" height="45" rx="10" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+      <text x="615" y="65" text-anchor="middle" fill="#10b981" font-size="11">📧 Email Svc</text>
+      <text x="615" y="80" text-anchor="middle" fill="#94a3b8" font-size="8">(Consumer 1)</text>
+      <rect x="550" y="95" width="130" height="45" rx="10" fill="#1a2235" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="615" y="115" text-anchor="middle" fill="#8b5cf6" font-size="11">📊 Analytics</text>
+      <text x="615" y="130" text-anchor="middle" fill="#94a3b8" font-size="8">(Consumer 2)</text>
+      <rect x="550" y="145" width="130" height="45" rx="10" fill="#1a2235" stroke="#f59e0b" stroke-width="2"/>
+      <text x="615" y="165" text-anchor="middle" fill="#f59e0b" font-size="11">📦 Inventory</text>
+      <text x="615" y="180" text-anchor="middle" fill="#94a3b8" font-size="8">(Consumer 3)</text>
+    </svg>`,
+    code: `<span class="cm">// Kafka Producer (Python - confluent_kafka)</span>
+<span class="kw">from</span> confluent_kafka <span class="kw">import</span> Producer
+
+<span class="var">conf</span> = {<span class="str">'bootstrap.servers'</span>: <span class="str">'localhost:9092'</span>}
+<span class="var">producer</span> = <span class="fn">Producer</span>(<span class="var">conf</span>)
+
+<span class="kw">def</span> <span class="fn">deliver</span>(<span class="var">err</span>, <span class="var">msg</span>):
+    <span class="kw">if</span> <span class="var">err</span>: <span class="fn">print</span>(<span class="str">f"Failed: {err}"</span>)
+
+<span class="var">producer</span>.<span class="fn">produce</span>(
+    <span class="str">'orders'</span>,
+    <span class="var">key</span>=<span class="str">"order_123"</span>,
+    <span class="var">value</span>=json.<span class="fn">dumps</span>(<span class="var">order_data</span>),
+    <span class="var">callback</span>=<span class="var">deliver</span>
+)
+<span class="var">producer</span>.<span class="fn">flush</span>()
+
+<span class="cm">// Kafka Consumer</span>
+<span class="var">consumer</span> = <span class="fn">Consumer</span>({
+    <span class="str">'bootstrap.servers'</span>: <span class="str">'localhost:9092'</span>,
+    <span class="str">'group.id'</span>: <span class="str">'email-service'</span>,
+    <span class="str">'auto.offset.reset'</span>: <span class="str">'earliest'</span>
+})
+<span class="var">consumer</span>.<span class="fn">subscribe</span>([<span class="str">'orders'</span>])
+
+<span class="kw">while</span> <span class="kw">True</span>:
+    <span class="var">msg</span> = <span class="var">consumer</span>.<span class="fn">poll</span>(<span class="num">1.0</span>)
+    <span class="kw">if</span> <span class="var">msg</span>: <span class="fn">process_order</span>(<span class="var">msg</span>.<span class="fn">value</span>())`,
+    scenario: `<h4>🎯 Scenario: Video Processing Pipeline</h4>
+<p style="color:var(--text-secondary);margin:1rem 0;">Users upload videos that need to be transcoded into multiple formats (480p, 720p, 1080p).</p>
+<h4 style="margin-top:1rem;">Architecture:</h4>
+<ol style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li>Upload → S3 → <strong>Kafka topic: video-uploads</strong></li>
+  <li>Transcoder service consumes, processes each format</li>
+  <li>Each format → <strong>Kafka topic: video-ready</strong></li>
+  <li>Notification service sends email/push on completion</li>
+  <li>Analytics service tracks processing times</li>
+  <li>Dead letter queue for failed transcodes</li>
+</ol>`
+  },
+  {
+    id: 'api-design',
+    title: 'API Design',
+    desc: 'Design clean, scalable APIs with REST, GraphQL, and gRPC patterns.',
+    level: 'beginner',
+    icon: '🔌',
+    iconClass: 'blue',
+    time: '20 min',
+    tags: ['REST', 'GraphQL', 'gRPC', 'WebSockets'],
+    concept: `<h3>API Design Patterns</h3>
+<p style="color:var(--text-secondary);margin:1rem 0;">APIs are the contract between services. Good API design is crucial for maintainable systems.</p>
+<h4>Comparison:</h4>
+<table class="comparison-table">
+  <thead><tr><th>Feature</th><th>REST</th><th>GraphQL</th><th>gRPC</th></tr></thead>
+  <tbody>
+    <tr><td>Protocol</td><td>HTTP/JSON</td><td>HTTP/JSON</td><td>HTTP/2 + Protobuf</td></tr>
+    <tr><td>Flexibility</td><td>Fixed endpoints</td><td>Client queries exactly what needed</td><td>Strongly typed contracts</td></tr>
+    <tr><td>Performance</td><td>Good</td><td>Good (avoids over-fetching)</td><td>Best (binary, multiplexed)</td></tr>
+    <tr><td>Use Case</td><td>Public APIs, CRUD</td><td>Mobile apps, complex data</td><td>Internal microservices</td></tr>
+  </tbody>
+</table>`,
+    diagram: `<svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg">
+      <text x="350" y="30" text-anchor="middle" fill="#f1f5f9" font-size="16" font-weight="700">API Gateway Pattern</text>
+      <rect x="250" y="50" width="200" height="40" rx="10" fill="#1a2235" stroke="#6366f1" stroke-width="2"/>
+      <text x="350" y="75" text-anchor="middle" fill="#f1f5f9" font-size="13" font-weight="600">📱 Client App</text>
+      <line x1="350" y1="90" x2="350" y2="130" stroke="#6366f1" stroke-width="2" marker-end="url(#arrow7)"/>
+      <defs><marker id="arrow7" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6366f1"/></marker></defs>
+      <rect x="250" y="130" width="200" height="40" rx="10" fill="#1a2235" stroke="#f59e0b" stroke-width="2"/>
+      <text x="350" y="155" text-anchor="middle" fill="#f59e0b" font-size="13" font-weight="700">🚪 API Gateway</text>
+      <line x1="290" y1="170" x2="120" y2="210" stroke="#6366f1" stroke-width="1.5"/>
+      <line x1="350" y1="170" x2="350" y2="210" stroke="#6366f1" stroke-width="1.5"/>
+      <line x1="410" y1="170" x2="580" y2="210" stroke="#6366f1" stroke-width="1.5"/>
+      <rect x="40" y="210" width="160" height="35" rx="8" fill="#1a2235" stroke="#3b82f6" stroke-width="2"/>
+      <text x="120" y="232" text-anchor="middle" fill="#3b82f6" font-size="11">/api/users → User Svc</text>
+      <rect x="270" y="210" width="160" height="35" rx="8" fill="#1a2235" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="350" y="232" text-anchor="middle" fill="#8b5cf6" font-size="11">/api/orders → Order Svc</text>
+      <rect x="500" y="210" width="160" height="35" rx="8" fill="#1a2235" stroke="#06b6d4" stroke-width="2"/>
+      <text x="580" y="232" text-anchor="middle" fill="#06b6d4" font-size="11">/api/products → Product Svc</text>
+    </svg>`,
+    code: `<span class="cm">// RESTful API Design (Node.js/Express)</span>
+<span class="kw">const</span> <span class="var">express</span> = <span class="fn">require</span>(<span class="str">'express'</span>);
+<span class="kw">const</span> <span class="var">router</span> = express.<span class="fn">Router</span>();
+
+<span class="cm">// GET /api/v1/users/:id</span>
+<span class="var">router</span>.<span class="fn">get</span>(<span class="str">'/:id'</span>, <span class="kw">async</span> (<span class="var">req</span>, <span class="var">res</span>) => {
+  <span class="kw">const</span> <span class="var">user</span> = <span class="kw">await</span> User.<span class="fn">findById</span>(<span class="var">req</span>.<span class="var">params</span>.<span class="var">id</span>);
+  <span class="kw">if</span> (!<span class="var">user</span>) <span class="kw">return</span> <span class="var">res</span>.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">json</span>({
+    <span class="var">error</span>: <span class="str">'User not found'</span>
+  });
+  <span class="var">res</span>.<span class="fn">json</span>({ <span class="var">data</span>: <span class="var">user</span> });
+});
+
+<span class="cm">// POST /api/v1/users (with validation)</span>
+<span class="var">router</span>.<span class="fn">post</span>(<span class="str">'/'</span>, <span class="fn">validateUser</span>, <span class="kw">async</span> (<span class="var">req</span>, <span class="var">res</span>) => {
+  <span class="kw">const</span> <span class="var">user</span> = <span class="kw">await</span> User.<span class="fn">create</span>(<span class="var">req</span>.<span class="var">body</span>);
+  <span class="var">res</span>.<span class="fn">status</span>(<span class="num">201</span>).<span class="fn">json</span>({ <span class="var">data</span>: <span class="var">user</span> });
+});`,
+    scenario: `<h4>🎯 Scenario: Designing a Payment API</h4>
+<p style="color:var(--text-secondary);margin:1rem 0;">Design a payment processing API for an e-commerce platform.</p>
+<h4 style="margin-top:1rem;">Key Design Decisions:</h4>
+<ol style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li><strong>Idempotent</strong> POST requests (use idempotency keys)</li>
+  <li><strong>Versioning:</strong> /api/v1/payments</li>
+  <li><strong>Rate limiting:</strong> 100 req/min per API key</li>
+  <li><strong>Webhooks:</strong> Async notifications for payment status</li>
+  <li><strong>Retry logic:</strong> Exponential backoff for failures</li>
+  <li><strong>Security:</strong> OAuth 2.0, TLS, tokenization</li>
+</ol>`
+  },
+  {
+    id: 'cdn',
+    title: 'CDN & Edge Computing',
+    desc: 'Deliver content faster using Content Delivery Networks and edge computing.',
+    level: 'beginner',
+    icon: '🌍',
+    iconClass: 'green',
+    time: '15 min',
+    tags: ['CloudFlare', 'Akamai', 'Edge', 'Caching'],
+    concept: `<h3>CDN & Edge Computing</h3>
+<p style="color:var(--text-secondary);margin:1rem 0;">CDNs distribute your content across geographically dispersed servers, reducing latency for users worldwide.</p>
+<h4>How CDNs Work:</h4>
+<ul style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li><strong>Origin Server:</strong> Your main server where content originates</li>
+  <li><strong>Edge Servers (PoPs):</strong> Cache copies of content near users</li>
+  <li><strong>DNS Routing:</strong> Directs users to nearest edge server</li>
+  <li><strong>Cache Hit/Miss:</strong> Serve from edge or fetch from origin</li>
+</ul>
+<div class="info-box tip"><span class="info-box-icon">🚀</span><div><strong>Edge Computing:</strong> Run code at edge locations (CloudFlare Workers, AWS Lambda@Edge). Process requests closer to users for ultra-low latency.</div></div>`,
+    diagram: `<svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+      <text x="350" y="30" text-anchor="middle" fill="#f1f5f9" font-size="16" font-weight="700">CDN Architecture</text>
+      <rect x="250" y="250" width="200" height="40" rx="10" fill="#1a2235" stroke="#ef4444" stroke-width="2"/>
+      <text x="350" y="275" text-anchor="middle" fill="#ef4444" font-size="13" font-weight="700">🖥️ Origin Server</text>
+      <line x1="350" y1="250" x2="120" y2="160" stroke="#6366f1" stroke-width="1.5"/>
+      <line x1="350" y1="250" x2="350" y2="160" stroke="#6366f1" stroke-width="1.5"/>
+      <line x1="350" y1="250" x2="580" y2="160" stroke="#6366f1" stroke-width="1.5"/>
+      <rect x="40" y="120" width="160" height="60" rx="12" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+      <text x="120" y="145" text-anchor="middle" fill="#10b981" font-size="12" font-weight="600">🌍 US Edge</text>
+      <text x="120" y="165" text-anchor="middle" fill="#94a3b8" font-size="9">Cache Hit: 95%</text>
+      <rect x="270" y="120" width="160" height="60" rx="12" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+      <text x="350" y="145" text-anchor="middle" fill="#10b981" font-size="12" font-weight="600">🌍 EU Edge</text>
+      <text x="350" y="165" text-anchor="middle" fill="#94a3b8" font-size="9">Cache Hit: 92%</text>
+      <rect x="500" y="120" width="160" height="60" rx="12" fill="#1a2235" stroke="#10b981" stroke-width="2"/>
+      <text x="580" y="145" text-anchor="middle" fill="#10b981" font-size="12" font-weight="600">🌍 Asia Edge</text>
+      <text x="580" y="165" text-anchor="middle" fill="#94a3b8" font-size="9">Cache Hit: 88%</text>
+      <line x1="120" y1="120" x2="120" y2="70" stroke="#6366f1" stroke-width="1.5"/>
+      <line x1="350" y1="120" x2="350" y2="70" stroke="#6366f1" stroke-width="1.5"/>
+      <line x1="580" y1="120" x2="580" y2="70" stroke="#6366f1" stroke-width="1.5"/>
+      <rect x="60" y="35" width="120" height="35" rx="8" fill="#1a2235" stroke="#6366f1" stroke-width="2"/>
+      <text x="120" y="57" text-anchor="middle" fill="#f1f5f9" font-size="11">👤 US Users</text>
+      <rect x="290" y="35" width="120" height="35" rx="8" fill="#1a2235" stroke="#6366f1" stroke-width="2"/>
+      <text x="350" y="57" text-anchor="middle" fill="#f1f5f9" font-size="11">👤 EU Users</text>
+      <rect x="520" y="35" width="120" height="35" rx="8" fill="#1a2235" stroke="#6366f1" stroke-width="2"/>
+      <text x="580" y="57" text-anchor="middle" fill="#f1f5f9" font-size="11">👤 Asia Users</text>
+    </svg>`,
+    code: `<span class="cm">// CDN Cache-Control Headers</span>
+<span class="cm">// Static assets: cache for 1 year</span>
+<span class="kw">Cache-Control</span>: <span class="str">public, max-age=31536000, immutable</span>
+
+<span class="cm">// API responses: short cache</span>
+<span class="kw">Cache-Control</span>: <span class="str">public, max-age=60, stale-while-revalidate=300</span>
+
+<span class="cm">// Dynamic content: no cache</span>
+<span class="kw">Cache-Control</span>: <span class="str">no-cache, no-store, must-revalidate</span>
+
+<span class="cm">// CloudFlare Worker (Edge Computing)</span>
+<span class="fn">addEventListener</span>(<span class="str">'fetch'</span>, <span class="var">event</span> => {
+  <span class="var">event</span>.<span class="fn">respondWith</span>(<span class="kw">async</span> () => {
+    <span class="kw">const</span> <span class="var">response</span> = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="var">event</span>.<span class="var">request</span>);
+    <span class="kw">const</span> <span class="var">newHeaders</span> = <span class="kw">new</span> <span class="fn">Headers</span>(<span class="var">response</span>.<span class="var">headers</span>);
+    <span class="var">newHeaders</span>.<span class="fn">set</span>(<span class="str">'X-Edge-Server'</span>, <span class="str">'cloudflare'</span>);
+    <span class="kw">return</span> <span class="kw">new</span> <span class="fn">Response</span>(<span class="var">response</span>.<span class="var">body</span>, {
+      <span class="var">status</span>: <span class="var">response</span>.<span class="var">status</span>,
+      <span class="var">headers</span>: <span class="var">newHeaders</span>
+    });
+  });
+});`,
+    scenario: `<h4>🎯 Scenario: Global News Website</h4>
+<p style="color:var(--text-secondary);margin:1rem 0;">A news website with 10M daily readers across 30 countries needs sub-second page loads globally.</p>
+<ol style="color:var(--text-secondary);margin:1rem 0;padding-left:1.5rem;">
+  <li><strong>CloudFlare CDN</strong> for static assets (images, CSS, JS)</li>
+  <li><strong>Edge caching</strong> for article HTML (5 min TTL)</li>
+  <li><strong>Image optimization</strong> at edge (WebP, resizing)</li>
+  <li><strong>DDoS protection</strong> via CDN WAF</li>
+  <li><strong>Edge computing</strong> for A/B testing and personalization</li>
+  <li><strong>Origin shield</strong> to protect origin servers</li>
+</ol>`
+  }
+];
+
+const scenarios = [
+  {
+    title: 'Design URL Shortener',
+    company: 'like Bit.ly',
+    steps: ['Generate unique short codes (base62 encoding)', 'Store mapping in key-value store (Redis/DynamoDB)', 'Redirect: lookup short code → original URL', 'Track analytics: clicks, geolocation, referrer', 'Handle collisions and rate limiting', 'Set TTL for expired links']
+  },
+  {
+    title: 'Design Twitter',
+    company: 'Social Media Platform',
+    steps: ['User service: profiles, followers, authentication', 'Tweet service: create, read, delete tweets', 'Timeline service: fan-out on write for feed generation', 'Media service: image/video upload & CDN delivery', 'Notification service: real-time alerts via WebSocket', 'Search service: Elasticsearch for tweet search']
+  },
+  {
+    title: 'Design Uber',
+    company: 'Ride Sharing',
+    steps: ['Geohash-based location tracking (Redis Geo)', 'Matching algorithm: find nearest available drivers', 'Real-time tracking: WebSocket for live updates', 'Pricing engine: surge pricing based on demand', 'Payment processing: Stripe integration', 'Trip history: time-series database']
+  },
+  {
+    title: 'Design Netflix',
+    company: 'Video Streaming',
+    steps: ['Video storage: S3 + CDN (Open Connect)', 'Adaptive bitrate streaming (HLS/DASH)', 'Recommendation engine: ML-based', 'User profiles & watch history', 'DRM & content protection', 'Analytics: viewing patterns, quality metrics']
+  },
+  {
+    title: 'Design WhatsApp',
+    company: 'Messaging App',
+    steps: ['Erlang/Ejabberd for XMPP messaging', 'Message queue for offline delivery', 'End-to-end encryption (Signal Protocol)', 'Media storage with CDN delivery', 'Presence service (online/offline status)', 'Group messaging with fan-out']
+  },
+  {
+    title: 'Design Web Crawler',
+    company: 'like Google Bot',
+    steps: ['URL frontier: priority queue for URLs to crawl', 'DNS resolution with caching', 'HTTP fetching with politeness delays', 'Content parsing & link extraction', 'Deduplication: Bloom filters', 'Storage: distributed document store']
+  }
+];
+
+const tools = [
+  { icon: '🐳', name: 'Docker', desc: 'Containerization for consistent deployments', cat: 'Infrastructure' },
+  { icon: '☸️', name: 'Kubernetes', desc: 'Container orchestration at scale', cat: 'Orchestration' },
+  { icon: '📊', name: 'Prometheus', desc: 'Metrics collection and monitoring', cat: 'Monitoring' },
+  { icon: '🔍', name: 'Grafana', desc: 'Visualization dashboards', cat: 'Monitoring' },
+  { icon: '📨', name: 'Apache Kafka', desc: 'Distributed event streaming platform', cat: 'Messaging' },
+  { icon: '🐰', name: 'RabbitMQ', desc: 'Message broker with flexible routing', cat: 'Messaging' },
+  { icon: '⚡', name: 'Redis', desc: 'In-memory data store & cache', cat: 'Database' },
+  { icon: '🐘', name: 'PostgreSQL', desc: 'Advanced relational database', cat: 'Database' },
+  { icon: '🍃', name: 'MongoDB', desc: 'Document-oriented NoSQL database', cat: 'Database' },
+  { icon: '🔎', name: 'Elasticsearch', desc: 'Full-text search & analytics engine', cat: 'Search' },
+  { icon: '⚖️', name: 'Nginx', desc: 'Load balancer & reverse proxy', cat: 'Networking' },
+  { icon: '🌐', name: 'CloudFlare', desc: 'CDN, DNS, DDoS protection', cat: 'CDN' },
+  { icon: '☁️', name: 'AWS', desc: 'Cloud infrastructure services', cat: 'Cloud' },
+  { icon: '📈', name: 'Datadog', desc: 'Cloud-scale monitoring', cat: 'Monitoring' },
+  { icon: '🔒', name: 'Vault', desc: 'Secrets management', cat: 'Security' },
+  { icon: '🔄', name: 'Terraform', desc: 'Infrastructure as Code', cat: 'Infrastructure' }
+];
+
+const quizData = [
+  {
+    q: 'Which load balancing algorithm sends requests to the server with the fewest active connections?',
+    options: ['Round Robin', 'Least Connections', 'IP Hash', 'Random'],
+    correct: 1,
+    explanation: 'Least Connections dynamically routes traffic to the server with the fewest active connections, making it ideal when request processing times vary.'
+  },
+  {
+    q: 'What is the main advantage of horizontal scaling over vertical scaling?',
+    options: ['Cheaper hardware', 'Virtually unlimited scale + fault tolerance', 'Simpler configuration', 'Better single-server performance'],
+    correct: 1,
+    explanation: 'Horizontal scaling (adding more machines) provides virtually unlimited scaling capacity and fault tolerance, unlike vertical scaling which is limited by single-machine capacity.'
+  },
+  {
+    q: 'Which cache eviction policy removes the least recently used items first?',
+    options: ['FIFO', 'LFU', 'LRU', 'Random'],
+    correct: 2,
+    explanation: 'LRU (Least Recently Used) evicts items that haven\'t been accessed for the longest time, making it effective for workloads with temporal locality.'
+  },
+  {
+    q: 'In a microservices architecture, what pattern is used for service-to-service communication with guaranteed delivery?',
+    options: ['REST API', 'Message Queue', 'Shared Database', 'Direct TCP'],
+    correct: 1,
+    explanation: 'Message Queues (Kafka, RabbitMQ) provide guaranteed delivery, decoupling, and async processing between microservices.'
+  },
+  {
+    q: 'What database pattern distributes data across multiple servers based on a key?',
+    options: ['Replication', 'Sharding', 'Partitioning', 'Indexing'],
+    correct: 1,
+    explanation: 'Sharding horizontally partitions data across multiple database servers based on a shard key (e.g., user_id range or hash).'
+  },
+  {
+    q: 'Which API protocol uses binary serialization and HTTP/2 for best performance?',
+    options: ['REST', 'GraphQL', 'gRPC', 'SOAP'],
+    correct: 2,
+    explanation: 'gRPC uses Protocol Buffers (binary) over HTTP/2 (multiplexed), offering superior performance for internal microservice communication.'
+  },
+  {
+    q: 'What is the purpose of a CDN?',
+    options: ['Database replication', 'Content delivery from edge servers near users', 'Load balancing', 'Message queuing'],
+    correct: 1,
+    explanation: 'CDNs cache content at geographically distributed edge servers, reducing latency by serving content from locations closer to users.'
+  },
+  {
+    q: 'In the Cache-Aside pattern, what happens on a cache miss?',
+    options: ['Return error to client', 'Read from database and populate cache', 'Return stale data', 'Redirect to another server'],
+    correct: 1,
+    explanation: 'On a cache miss, the application reads from the database and then populates the cache with the data for future requests.'
+  },
+  {
+    q: 'Which CAP theorem property must be sacrificed in a distributed system during a network partition?',
+    options: ['Consistency or Availability', 'Consistency or Partition Tolerance', 'Availability or Partition Tolerance', 'None - all three are always possible'],
+    correct: 0,
+    explanation: 'During a network partition (P), a system must choose between Consistency (C) and Availability (A). You cannot have all three simultaneously.'
+  },
+  {
+    q: 'What is the purpose of circuit breakers in microservices?',
+    options: ['Load balancing', 'Preventing cascading failures', 'Data encryption', 'Database scaling'],
+    correct: 1,
+    explanation: 'Circuit breakers prevent cascading failures by stopping requests to a failing service, allowing it time to recover before resuming traffic.'
+  }
+];
+
+const checklistItems = [
+  'Understand Scalability (Vertical vs Horizontal)',
+  'Learn Load Balancing algorithms',
+  'Master Caching strategies',
+  'Design Database schemas (SQL vs NoSQL)',
+  'Implement Message Queues',
+  'Design RESTful APIs',
+  'Understand CDN & Edge Computing',
+  'Learn Microservices patterns',
+  'Understand CAP Theorem',
+  'Implement Rate Limiting',
+  'Design for High Availability',
+  'Learn about Consistent Hashing',
+  'Understand Event-Driven Architecture',
+  'Learn about Service Discovery',
+  'Implement Circuit Breakers',
+  'Design for Idempotency',
+  'Understand Distributed Transactions',
+  'Learn about Blue-Green Deployments',
+  'Master System Monitoring',
+  'Design a URL Shortener',
+  'Design a Social Media Feed',
+  'Design a Chat System',
+  'Design a Video Streaming Service',
+  'Design a Search Engine',
+  'Design a Rate Limiter'
+];
+
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', () => {
+  renderTopics();
+  renderComponents();
+  renderScenarios();
+  renderTools();
+  renderQuiz();
+  renderChecklist();
+  updateSim();
+  initScrollAnimations();
+  initCounters();
+});
+
+// ==================== RENDER FUNCTIONS ====================
+function renderTopics(filter = 'all') {
+  const grid = document.getElementById('topicGrid');
+  const filtered = filter === 'all' ? topics : topics.filter(t => t.level === filter);
+  grid.innerHTML = filtered.map(t => `
+    <div class="topic-card animate-on-scroll" onclick="openTopic('${t.id}')">
+      <div class="card-icon ${t.iconClass}">${t.icon}</div>
+      <h3>${t.title}</h3>
+      <p>${t.desc}</p>
+      <div class="card-tags">
+        ${t.tags.map(tag => `<span class="tag ${t.level}">${tag}</span>`).join('')}
+      </div>
+      <div class="card-meta">
+        <span>⏱️ ${t.time}</span>
+        <span class="tag ${t.level}">${t.level === 'beginner' ? '🟢 Beginner' : t.level === 'intermediate' ? '🟡 Intermediate' : '🔴 Advanced'}</span>
+      </div>
+    </div>
+  `).join('');
+  initScrollAnimations();
+}
+
+function renderComponents() {
+  const accordion = document.getElementById('componentsAccordion');
+  const components = [
+    {
+      title: '🔑 Core Components of Distributed Systems',
+      content: `<p>A distributed system consists of multiple independent components that communicate over a network:</p>
+      <ul style="margin:1rem 0;padding-left:1.5rem;color:var(--text-secondary);">
+        <li><strong>Clients:</strong> Web browsers, mobile apps, IoT devices</li>
+        <li><strong>Servers:</strong> Web servers, application servers, database servers</li>
+        <li><strong>Load Balancers:</strong> Distribute traffic across servers</li>
+        <li><strong>Caches:</strong> Fast in-memory storage (Redis, Memcached)</li>
+        <li><strong>Message Brokers:</strong> Async communication (Kafka, RabbitMQ)</li>
+        <li><strong>Databases:</strong> Persistent storage (SQL, NoSQL)</li>
+        <li><strong>CDNs:</strong> Content delivery networks</li>
+        <li><strong>Service Mesh:</strong> Service-to-service communication layer (Istio)</li>
+      </ul>`
+    },
+    {
+      title: '⚖️ Load Balancing Algorithms',
+      content: `<p>Choosing the right algorithm depends on your workload:</p>
+      <ul style="margin:1rem 0;padding-left:1.5rem;color:var(--text-secondary);">
+        <li><strong>Round Robin:</strong> Simple, equal distribution</li>
+        <li><strong>Weighted Round Robin:</strong> Accounts for server capacity</li>
+        <li><strong>Least Connections:</strong> Best for varying request durations</li>
+        <li><strong>IP Hash:</strong> Session persistence</li>
+        <li><strong>Geographic:</strong> Route by user location</li>
+        <li><strong>Consistent Hashing:</strong> Minimal redistribution on node changes</li>
+      </ul>
+      <div class="info-box info"><span class="info-box-icon">💡</span><div><strong>Tip:</strong> Most production systems use Least Connections or Weighted Round Robin with health checks.</div></div>`
+    },
+    {
+      title: '💾 Database Scaling Patterns',
+      content: `<p>Database scaling involves multiple strategies:</p>
+      <ul style="margin:1rem 0;padding-left:1.5rem;color:var(--text-secondary);">
+        <li><strong>Read Replicas:</strong> Offload read traffic to copies</li>
+        <li><strong>Sharding:</strong> Split data across multiple servers</li>
+        <li><strong>Partitioning:</strong> Split tables within same database</li>
+        <li><strong>Connection Pooling:</strong> Reuse database connections</li>
+        <li><strong>Indexing:</strong> Speed up queries with proper indexes</li>
+        <li><strong>Denormalization:</strong> Trade storage for read performance</li>
+      </ul>`
+    },
+    {
+      title: '🔐 Authentication & Authorization',
+      content: `<p>Secure your system with proper auth patterns:</p>
+      <ul style="margin:1rem 0;padding-left:1.5rem;color:var(--text-secondary);">
+        <li><strong>OAuth 2.0:</strong> Delegated authorization</li>
+        <li><strong>JWT:</strong> Stateless token-based auth</li>
+        <li><strong>API Keys:</strong> Simple service-to-service auth</li>
+        <li><strong>mTLS:</strong> Mutual TLS for zero-trust</li>
+        <li><strong>RBAC:</strong> Role-Based Access Control</li>
+        <li><strong>Rate Limiting:</strong> Prevent abuse</li>
+      </ul>`
+    },
+    {
+      title: '📊 Monitoring & Observability',
+      content: `<p>You can't improve what you can't measure:</p>
+      <ul style="margin:1rem 0;padding-left:1.5rem;color:var(--text-secondary);">
+        <li><strong>Metrics:</strong> CPU, memory, latency, error rates (Prometheus)</li>
+        <li><strong>Logging:</strong> Centralized log aggregation (ELK Stack)</li>
+        <li><strong>Tracing:</strong> Distributed request tracing (Jaeger, Zipkin)</li>
+        <li><strong>Alerting:</strong> PagerDuty, Slack notifications</li>
+        <li><strong>Dashboards:</strong> Grafana for visualization</li>
+        <li><strong>SLO/SLI:</strong> Define and track service level objectives</li>
+      </ul>`
+    }
+  ];
+
+  accordion.innerHTML = components.map((c, i) => `
+    <div class="accordion-item ${i === 0 ? 'open' : ''}">
+      <div class="accordion-header" onclick="toggleAccordion(this)">
+        <span>${c.title}</span>
+        <span class="accordion-icon">▼</span>
+      </div>
+      <div class="accordion-body">
+        <div class="accordion-content">${c.content}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderScenarios() {
+  const grid = document.getElementById('scenarioGrid');
+  grid.innerHTML = scenarios.map(s => `
+    <div class="scenario-card animate-on-scroll">
+      <div class="scenario-header">
+        <h3>${s.title}</h3>
+        <p>${s.company}</p>
+      </div>
+      <div class="scenario-body">
+        <ol class="scenario-steps">
+          ${s.steps.map((step, i) => `
+            <li>
+              <span class="step-num">${i + 1}</span>
+              <span>${step}</span>
+            </li>
+          `).join('')}
+        </ol>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTools(filter = '') {
+  const grid = document.getElementById('toolsGrid');
+  const filtered = filter ? tools.filter(t =>
+    t.name.toLowerCase().includes(filter.toLowerCase()) ||
+    t.desc.toLowerCase().includes(filter.toLowerCase()) ||
+    t.cat.toLowerCase().includes(filter.toLowerCase())
+  ) : tools;
+
+  grid.innerHTML = filtered.map(t => `
+    <div class="tool-card animate-on-scroll">
+      <div class="tool-icon">${t.icon}</div>
+      <h4>${t.name}</h4>
+      <p>${t.desc}</p>
+      <span class="tool-category">${t.cat}</span>
+    </div>
+  `).join('');
+}
+
+function renderQuiz() {
+  const container = document.getElementById('quizContainer');
+  container.innerHTML = `
+    <div id="quizQuestionArea">
+      <div class="quiz-question" id="quizQuestion"></div>
+      <div class="quiz-options" id="quizOptions"></div>
+      <div class="quiz-explanation" id="quizExplanation"></div>
+      <div class="quiz-nav">
+        <button class="btn btn-secondary" id="quizPrevBtn" onclick="prevQuestion()" disabled>← Previous</button>
+        <span id="quizProgress" style="color:var(--text-secondary);font-size:0.9rem;"></span>
+        <button class="btn btn-primary" id="quizNextBtn" onclick="nextQuestion()">Next →</button>
+      </div>
+    </div>
+    <div id="quizResult" style="display:none;"></div>
+  `;
+  currentQuestion = 0;
+  quizAnswers = new Array(quizData.length).fill(-1);
+  showQuestion();
+}
+
+// ==================== INTERACTION FUNCTIONS ====================
+let currentTopic = null;
+
+function openTopic(id) {
+  currentTopic = topics.find(t => t.id === id);
+  if (!currentTopic) return;
+
+  document.getElementById('modalTitle').textContent = currentTopic.icon + ' ' + currentTopic.title;
+  document.getElementById('modalSubtitle').textContent = currentTopic.desc;
+  document.getElementById('modalConcept').innerHTML = currentTopic.concept;
+  document.getElementById('modalDiagram').innerHTML = `<div class="diagram-container">${currentTopic.diagram}</div>`;
+  document.getElementById('modalCode').innerHTML = `<div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">Code Example</span>
+      <button class="code-copy" onclick="copyCode(this)">📋 Copy</button>
+    </div>
+    <div class="code-body">${currentTopic.code}</div>
+  </div>`;
+  document.getElementById('modalScenario').innerHTML = currentTopic.scenario;
+
+  // Reset tabs
+  document.querySelectorAll('#modalTabs .modal-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+  document.querySelectorAll('.modal-body .modal-content').forEach((c, i) => c.classList.toggle('active', i === 0));
+
+  document.getElementById('modalOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function switchModalTab(tab) {
+  const tabs = ['concept', 'diagram', 'code', 'scenario'];
+  const idx = tabs.indexOf(tab);
+
+  document.querySelectorAll('#modalTabs .modal-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.modal-body .modal-content').forEach((c, i) => c.classList.toggle('active', i === idx));
+}
+
+function toggleAccordion(header) {
+  const item = header.parentElement;
+  item.classList.toggle('open');
+}
+
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('.code-body').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy', 2000);
+  });
+}
+
+// Path tabs
+document.querySelectorAll('.path-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.path-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    renderTopics(tab.dataset.filter);
+  });
+});
+
+// Architecture patterns
+function showArchPattern(pattern) {
+  document.querySelectorAll('#architecture .modal-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  ['Monolith', 'Microservices', 'EventDriven', 'Serverless'].forEach(p => {
+    const el = document.getElementById('arch' + p);
+    if (el) el.classList.remove('active');
+  });
+  const el = document.getElementById('arch' + pattern.charAt(0).toUpperCase() + pattern.slice(1));
+  if (el) el.classList.add('active');
+}
+
+// Architecture Builder
+let selectedComps = [];
+
+function toggleArchComp(btn) {
+  const comp = btn.textContent.trim();
+  if (btn.classList.contains('added')) {
+    btn.classList.remove('added');
+    selectedComps = selectedComps.filter(c => c !== comp);
+  } else {
+    btn.classList.add('added');
+    selectedComps.push(comp);
+  }
+  renderArchCanvas();
+}
+
+function renderArchCanvas() {
+  const canvas = document.getElementById('archCanvas');
+  const arrows = document.getElementById('archArrows');
+
+  if (selectedComps.length === 0) {
+    canvas.innerHTML = '<span style="color: var(--text-muted); font-size: 0.9rem;">Click components above to add them here →</span>';
+    arrows.innerHTML = '';
+    canvas.classList.remove('has-items');
+    return;
+  }
+
+  canvas.classList.add('has-items');
+  canvas.innerHTML = selectedComps.map(c =>
+    `<span class="placed-comp" onclick="removeArchComp('${c}')">${c} ✕</span>`
+  ).join('<span class="flow-arrow" style="font-size:1.2rem;color:var(--accent);">→</span>');
+
+  arrows.innerHTML = `
+    <div class="info-box info" style="margin-top:1rem;">
+      <span class="info-box-icon">📐</span>
+      <div><strong>Architecture:</strong> ${selectedComps.length} components connected. Data flows left to right through your pipeline.</div>
+    </div>
+  `;
+}
+
+function removeArchComp(comp) {
+  selectedComps = selectedComps.filter(c => c !== comp);
+  document.querySelectorAll('.arch-comp').forEach(btn => {
+    if (btn.textContent.trim() === comp) btn.classList.remove('added');
+  });
+  renderArchCanvas();
+}
+
+// Simulator
+let simHistory = [];
+
+function updateSim() {
+  const reqRate = parseInt(document.getElementById('reqRate').value);
+  const serverCount = parseInt(document.getElementById('serverCount').value);
+  const latency = parseInt(document.getElementById('latency').value);
+
+  document.getElementById('reqRateVal').textContent = reqRate;
+  document.getElementById('serverCountVal').textContent = serverCount;
+  document.getElementById('latencyVal').textContent = latency;
+
+  const reqPerServer = Math.round(reqRate / serverCount);
+  const totalLatency = Math.round(latency * (1 + (reqRate / (serverCount * 100))));
+  const uptime = Math.max(80, 99.9 - (reqRate / 1000) * 5).toFixed(2);
+  const errorRate = Math.max(0, (reqRate - serverCount * 200) / reqRate * 100).toFixed(1);
+
+  document.getElementById('simOutput').innerHTML = `
+    <div class="sim-stat"><div class="val">${reqPerServer}</div><div class="label">Req/Server/s</div></div>
+    <div class="sim-stat"><div class="val">${totalLatency}ms</div><div class="label">Avg Latency</div></div>
+    <div class="sim-stat"><div class="val">${uptime}%</div><div class="label">Uptime</div></div>
+    <div class="sim-stat"><div class="val">${errorRate}%</div><div class="label">Error Rate</div></div>
+    <div class="sim-stat"><div class="val">${(reqRate * 0.001).toFixed(1)}MB/s</div><div class="label">Throughput</div></div>
+  `;
+
+  // Server visualization
+  const viz = document.getElementById('serverViz');
+  viz.innerHTML = Array.from({length: serverCount}, (_, i) => {
+    const load = Math.min(100, Math.round(reqRate / (serverCount * 2) + Math.random() * 10));
+    const color = load > 80 ? '#ef4444' : load > 60 ? '#f59e0b' : '#10b981';
+    return `<div style="background:var(--bg-secondary);border:2px solid ${color};border-radius:12px;padding:16px;min-width:100px;text-align:center;">
+      <div style="font-size:0.8rem;color:var(--text-muted);">Server ${i + 1}</div>
+      <div style="font-size:1.5rem;font-weight:800;color:${color};margin:8px 0;">${load}%</div>
+      <div style="background:var(--border);height:6px;border-radius:3px;overflow:hidden;">
+        <div style="width:${load}%;height:100%;background:${color};border-radius:3px;transition:width 0.3s;"></div>
+      </div>
+      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:6px;">${reqPerServer} req/s</div>
+    </div>`;
+  }).join('');
+
+  // Chart
+  simHistory.push({ reqRate, latency: totalLatency, errorRate: parseFloat(errorRate) });
+  if (simHistory.length > 20) simHistory.shift();
+  drawSimChart();
+}
+
+function drawSimChart() {
+  const canvas = document.getElementById('simChart');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Background
+  ctx.fillStyle = '#1a2235';
+  ctx.fillRect(0, 0, w, h);
+
+  if (simHistory.length < 2) return;
+
+  const maxLatency = Math.max(...simHistory.map(s => s.latency), 100);
+
+  // Grid
+  ctx.strokeStyle = '#2d3748';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 5; i++) {
+    const y = 30 + (h - 60) * i / 4;
+    ctx.beginPath();
+    ctx.moveTo(60, y);
+    ctx.lineTo(w - 20, y);
+    ctx.stroke();
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round(maxLatency * (1 - i / 4)) + 'ms', 55, y + 4);
+  }
+
+  // Latency line
+  ctx.beginPath();
+  ctx.strokeStyle = '#6366f1';
+  ctx.lineWidth = 2;
+  simHistory.forEach((s, i) => {
+    const x = 60 + (w - 80) * i / (simHistory.length - 1);
+    const y = 30 + (h - 60) * (1 - s.latency / maxLatency);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Points
+  simHistory.forEach((s, i) => {
+    const x = 60 + (w - 80) * i / (simHistory.length - 1);
+    const y = 30 + (h - 60) * (1 - s.latency / maxLatency);
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#6366f1';
+    ctx.fill();
+  });
+
+  // Label
+  ctx.fillStyle = '#818cf8';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('⚡ Latency over time', 70, 20);
+}
+
+// Quiz
+let currentQuestion = 0;
+let quizAnswers = [];
+
+function showQuestion() {
+  const q = quizData[currentQuestion];
+  document.getElementById('quizQuestion').textContent = `Q${currentQuestion + 1}. ${q.q}`;
+  document.getElementById('quizOptions').innerHTML = q.options.map((opt, i) => {
+    const letters = ['A', 'B', 'C', 'D'];
+    const selected = quizAnswers[currentQuestion] === i;
+    return `<div class="quiz-option ${selected ? 'selected' : ''}" onclick="selectAnswer(${i})">
+      <span class="quiz-option-letter">${letters[i]}</span>
+      <span>${opt}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('quizProgress').textContent = `${currentQuestion + 1} / ${quizData.length}`;
+  document.getElementById('quizPrevBtn').disabled = currentQuestion === 0;
+  document.getElementById('quizNextBtn').textContent = currentQuestion === quizData.length - 1 ? '🏁 Finish' : 'Next →';
+  document.getElementById('quizExplanation').classList.remove('show');
+}
+
+function selectAnswer(idx) {
+  quizAnswers[currentQuestion] = idx;
+  const q = quizData[currentQuestion];
+
+  document.querySelectorAll('.quiz-option').forEach((opt, i) => {
+    opt.classList.remove('selected', 'correct', 'wrong');
+    if (i === q.correct) opt.classList.add('correct');
+    else if (i === idx && idx !== q.correct) opt.classList.add('wrong');
+    else if (i === idx) opt.classList.add('selected');
+  });
+
+  const explanation = document.getElementById('quizExplanation');
+  explanation.innerHTML = `<strong>${idx === q.correct ? '✅ Correct!' : '❌ Incorrect.'}</strong> ${q.explanation}`;
+  explanation.classList.add('show');
+}
+
+function nextQuestion() {
+  if (quizAnswers[currentQuestion] === -1) {
+    showNotification('Please select an answer first!', 'error');
+    return;
+  }
+  if (currentQuestion < quizData.length - 1) {
+    currentQuestion++;
+    showQuestion();
+  } else {
+    showQuizResult();
+  }
+}
+
+function prevQuestion() {
+  if (currentQuestion > 0) {
+    currentQuestion--;
+    showQuestion();
+  }
+}
+
+function showQuizResult() {
+  let score = 0;
+  quizAnswers.forEach((a, i) => { if (a === quizData[i].correct) score++; });
+
+  const pct = Math.round(score / quizData.length * 100);
+  const emoji = pct >= 80 ? '🏆' : pct >= 60 ? '👍' : '📚';
+
+  document.getElementById('quizQuestionArea').style.display = 'none';
+  const result = document.getElementById('quizResult');
+  result.style.display = 'block';
+  result.innerHTML = `
+    <div class="quiz-score">
+      <div style="font-size:4rem;margin-bottom:1rem;">${emoji}</div>
+      <div class="score-num">${score}/${quizData.length}</div>
+      <div class="score-label" style="margin-top:0.5rem;">${pct}% Correct</div>
+      <p style="color:var(--text-secondary);margin-top:1rem;">
+        ${pct >= 80 ? 'Excellent! You have strong system design knowledge!' :
+          pct >= 60 ? 'Good job! Review the topics you missed to improve.' :
+          'Keep learning! Review the topics above and try again.'}
+      </p>
+      <button class="btn btn-primary" style="margin-top:1.5rem;" onclick="resetQuiz()">🔄 Try Again</button>
+    </div>
+  `;
+}
+
+function resetQuiz() {
+  currentQuestion = 0;
+  quizAnswers = new Array(quizData.length).fill(-1);
+  document.getElementById('quizQuestionArea').style.display = 'block';
+  document.getElementById('quizResult').style.display = 'none';
+  showQuestion();
+}
+
+// Checklist
+function renderChecklist() {
+  const list = document.getElementById('checklistItems');
+  const saved = JSON.parse(localStorage.getItem('sd-checklist') || '[]');
+  list.innerHTML = checklistItems.map((item, i) => `
+    <li class="${saved.includes(i) ? 'checked' : ''}" onclick="toggleCheck(${i}, this)">
+      <span class="check-icon">${saved.includes(i) ? '✓' : ''}</span>
+      <span>${item}</span>
+    </li>
+  `).join('');
+}
+
+function toggleCheck(idx, el) {
+  const saved = JSON.parse(localStorage.getItem('sd-checklist') || '[]');
+  if (saved.includes(idx)) {
+    saved.splice(saved.indexOf(idx), 1);
+    el.classList.remove('checked');
+    el.querySelector('.check-icon').textContent = '';
+  } else {
+    saved.push(idx);
+    el.classList.add('checked');
+    el.querySelector('.check-icon').textContent = '✓';
+    showNotification('✅ Progress saved!', 'success');
+  }
+  localStorage.setItem('sd-checklist', JSON.stringify(saved));
+}
+
+// Tools search
+function filterTools(query) {
+  renderTools(query);
+  initScrollAnimations();
+}
+
+// Scroll animations
+function initScrollAnimations() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+}
+
+// Counters
+function initCounters() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const target = parseInt(el.dataset.count);
+        animateCounter(el, target);
+        observer.unobserve(el);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.stat-num').forEach(el => observer.observe(el));
+}
+
+function animateCounter(el, target) {
+  let current = 0;
+  const step = target / 40;
+  const interval = setInterval(() => {
+    current += step;
+    if (current >= target) {
+      current = target;
+      clearInterval(interval);
+    }
+    el.textContent = Math.round(current) + '+';
+  }, 30);
+}
+
+// Progress bar
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  document.getElementById('progressFill').style.width = progress + '%';
+
+  document.getElementById('header').classList.toggle('scrolled', scrollTop > 50);
+
+  // Active nav
+  const sections = document.querySelectorAll('section[id]');
+  sections.forEach(section => {
+    const top = section.offsetTop - 100;
+    const bottom = top + section.offsetHeight;
+    const id = section.getAttribute('id');
+    const link = document.querySelector(`nav a[href="#${id}"]`);
+    if (link) {
+      link.classList.toggle('active', scrollTop >= top && scrollTop < bottom);
+    }
+  });
+});
+
+// Notification
+function showNotification(msg, type = 'info') {
+  const el = document.getElementById('notification');
+  el.textContent = msg;
+  el.className = `notification ${type} show`;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// Mobile nav
+function toggleMobileNav() {
+  const nav = document.getElementById('mainNav');
+  nav.style.display = nav.style.display === 'flex' ? 'none' : 'flex';
+  nav.style.position = 'absolute';
+  nav.style.top = '70px';
+  nav.style.left = '0';
+  nav.style.right = '0';
+  nav.style.background = 'var(--bg-secondary)';
+  nav.style.flexDirection = 'column';
+  nav.style.padding = '1rem';
+  nav.style.borderBottom = '1px solid var(--border)';
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
